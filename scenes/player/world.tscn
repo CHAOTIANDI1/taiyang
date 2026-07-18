@@ -30,6 +30,8 @@ color = Color(0.15, 0.17, 0.2, 1)
 
 [node name="Ground" type="StaticBody2D" parent="."]
 position = Vector2(640, 620)
+collision_layer = 1
+collision_mask = 0
 
 [node name="GroundShape" type="CollisionShape2D" parent="Ground"]
 shape = SubResource("RectangleShape2D_ground")
@@ -40,6 +42,8 @@ modulate = Color(0.3, 0.3, 0.3, 1)
 
 [node name="Player" type="CharacterBody2D" parent="."]
 position = Vector2(400, 400)
+collision_layer = 2
+collision_mask = 1
 script = ExtResource("1_player")
 
 [node name="PlayerShape" type="CollisionShape2D" parent="Player"]
@@ -55,6 +59,8 @@ position_smoothing_speed = 8.0
 
 [node name="TrainingDummy" type="CharacterBody2D" parent="."]
 position = Vector2(800, 400)
+collision_layer = 4
+collision_mask = 1
 script = ExtResource("2_monster")
 monster_id = "training_dummy"
 
@@ -67,6 +73,8 @@ modulate = Color(0.5, 0.3, 0.2, 1)
 
 [node name="RedScorpion" type="CharacterBody2D" parent="."]
 position = Vector2(1000, 400)
+collision_layer = 4
+collision_mask = 1
 script = ExtResource("2_monster")
 monster_id = "red_scorpion"
 
