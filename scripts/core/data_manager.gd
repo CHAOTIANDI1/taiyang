@@ -15,12 +15,12 @@ func _ready() -> void:
 		load_file(f)
 
 func load_file(file_name: String) -> void:
-	var path := "res://data/%s.json" % file_name
+	var path: String = "res://data/%s.json" % file_name
 	if not FileAccess.file_exists(path):
 		push_warning("DataManager: 文件缺失 %s" % path)
 		_cache[file_name] = {}
 		return
-	var text := FileAccess.get_file_as_string(path)
+	var text: String = FileAccess.get_file_as_string(path)
 	var parsed = JSON.parse_string(text)
 	if parsed == null:
 		push_error("DataManager: 解析失败 %s" % path)

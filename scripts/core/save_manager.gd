@@ -15,8 +15,8 @@ func save(slot: String, data: Dictionary) -> bool:
 	if not _initialized:
 		push_error("SaveManager: 未初始化")
 		return false
-	var path := SAVE_DIR + slot + ".json"
-	var f := FileAccess.open(path, FileAccess.WRITE)
+	var path: String = SAVE_DIR + slot + ".json"
+	var f: FileAccess = FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		push_error("SaveManager: 打不开 %s" % path)
 		return false
@@ -25,14 +25,14 @@ func save(slot: String, data: Dictionary) -> bool:
 	return true
 
 func load(slot: String) -> Dictionary:
-	var path := SAVE_DIR + slot + ".json"
+	var path: String = SAVE_DIR + slot + ".json"
 	if not FileAccess.file_exists(path):
 		return {}
-	var text := FileAccess.get_file_as_string(path)
+	var text: String = FileAccess.get_file_as_string(path)
 	return JSON.parse_string(text) if text else {}
 
 func delete_slot(slot: String) -> bool:
-	var path := SAVE_DIR + slot + ".json"
+	var path: String = SAVE_DIR + slot + ".json"
 	if FileAccess.file_exists(path):
 		return DirAccess.remove_absolute(path) == OK
 	return false
