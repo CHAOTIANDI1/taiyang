@@ -92,6 +92,12 @@
 
 **新增 JSON 文件必须先在 §1.4 登记，否则视为违规**。
 
+**例外条款（v2.5 经闸门 C 审计后确认）**：
+- **输入映射（InputMap）**属于 Godot 引擎原生配置，由 project.godot 的 `[input]` 段管理由 Godot Input.get_vector 直接读取。**不写入 data/ 目录**。这避免每启动读 JSON 反射调用 InputMap API 的额外复杂度。
+- **窗口/显示/渲染设定**同样属于 project.godot 配置（在 `[display]` / `[rendering]` 段），不进 JSON。
+- 项目身份（`[application]` 段）、Autoload 注册（`[autoload]` 段）也属于 project.godot。
+- **判断标准**：若该数据是 Godot 引擎已知配置段的标准管理对象 → 留在 project.godot；若是我们自定义的游戏数据 → 进 data/ JSON 文件。
+
 ---
 
 ### 知识库运维协议
