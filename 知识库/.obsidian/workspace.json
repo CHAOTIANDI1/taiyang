@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "01-文件格式名词.md",
+                "file": "25-26-Vector2与Modulate闪白.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "01-文件格式名词"
+              "title": "25-26-Vector2与Modulate闪白"
             }
           }
         ]
@@ -185,6 +185,7 @@
   },
   "active": "6a66ca6d58031247",
   "lastOpenFiles": [
+    "01-文件格式名词.md",
     "25-26-Vector2与Modulate闪白.md",
     "24-GodotInputMap与输入映射.md",
     "23-规则执行滑坡与3道防坡闸门.md",
@@ -193,7 +194,6 @@
     "20-MVP完整工具清单.md",
     "02-技术栈与工具全景.md",
     "18-GSAP与Tween动画.md",
-    "01-文件格式名词.md",
     "未命名 1.canvas",
     "00-索引.md",
     "未命名.canvas",

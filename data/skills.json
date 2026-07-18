@@ -14,5 +14,63 @@
       }
     }
   },
-  "_data": {}
+  "_data": {
+    "player_attack_basic": {
+      "name": "基础攻击",
+      "source": "weapon",
+      "type": "basic",
+      "damage_multiplier": 1.0,
+      "cooldown": 0.4,
+      "mp_cost": 0,
+      "description": "挥剑普攻",
+      "hitbox_width": 50,
+      "hitbox_height": 50,
+      "hitbox_offset": 35
+    },
+    "player_skill_1": {
+      "name": "横扫",
+      "source": "class",
+      "type": "basic",
+      "damage_multiplier": 1.5,
+      "cooldown": 2.5,
+      "mp_cost": 5,
+      "description": "短 CD 横扫一圈",
+      "hitbox_width": 70,
+      "hitbox_height": 70,
+      "hitbox_offset": 30
+    },
+    "player_skill_2": {
+      "name": "突刺",
+      "source": "class",
+      "type": "core",
+      "damage_multiplier": 2.0,
+      "cooldown": 8.0,
+      "mp_cost": 10,
+      "description": "向前突刺造成高伤害",
+      "hitbox_width": 80,
+      "hitbox_height": 40,
+      "hitbox_offset": 50
+    },
+    "player_skill_3": {
+      "name": "旋风斩",
+      "source": "class",
+      "type": "burst",
+      "damage_multiplier": 3.0,
+      "cooldown": 12.0,
+      "mp_cost": 20,
+      "description": "爆发伤害旋风斩",
+      "hitbox_width": 90,
+      "hitbox_height": 90,
+      "hitbox_offset": 20
+    },
+    "monster_attack_basic": {
+      "name": "怪物普攻",
+      "source": "class",
+      "type": "basic",
+      "damage_multiplier": 1.0,
+      "cooldown": 1.5,
+      "mp_cost": 0,
+      "description": "怪物普通攻击"
+    }
+  }
 }
