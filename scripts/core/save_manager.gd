@@ -38,12 +38,12 @@ func delete_slot(slot: String) -> bool:
 	return false
 
 func list_slots() -> Array:
-	var dir := DirAccess.open(SAVE_DIR)
+	var dir: DirAccess = DirAccess.open(SAVE_DIR)
 	if dir == null:
 		return []
 	var slots: Array = []
 	dir.list_dir_begin()
-	var name := dir.get_next()
+	var name: String = dir.get_next()
 	while name != "":
 		if name.ends_with(".json"):
 			slots.append(name.substr(0, name.length() - 5))

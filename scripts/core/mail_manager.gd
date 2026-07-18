@@ -8,7 +8,7 @@ func _ready() -> void:
 	pass
 
 func add_system_mail(title: String, body: String, attachment: Dictionary = {}, expire_hours: int = 0) -> void:
-	var mail := {
+	var mail: Dictionary = {
 		"id": "mail_%d" % Time.get_ticks_msec(),
 		"type": "system",
 		"title": title,
@@ -31,11 +31,11 @@ func take_attachment(mail_id: String) -> Dictionary:
 	return {}
 
 func clean_expired() -> void:
-	var cur := Time.get_unix_time_from_system()
-	var kept := []
+	var cur: int = Time.get_unix_time_from_system()
+	var kept: Array = []
 	for mail in _mails:
 		if mail.expire_hours > 0:
-			var elapsed_h := (cur - mail.received_time) / 3600.0
+			var elapsed_h: float = float(cur - mail.received_time) / 3600.0
 			if elapsed_h >= float(mail.expire_hours) and not mail.read:
 				continue
 		kept.append(mail)

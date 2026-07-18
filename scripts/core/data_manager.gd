@@ -32,18 +32,21 @@ func get_data(file_name: String) -> Dictionary:
 	return _cache.get(file_name, {})
 
 func get_monster(id: String) -> Dictionary:
-	var data := _cache.get("monsters", {}).get("_data", {})
+	var data: Dictionary = _cache.get("monsters", {}).get("_data", {})
 	return data.get(id, {})
 
 func get_item(id: String) -> Dictionary:
-	var all := _cache.get("items", {})
+	var all: Dictionary = _cache.get("items", {})
 	for category in ["important", "usable", "material", "food", "sub_prof", "skill_book"]:
-		if all.get(category, {}).has(id):
-			return all[category][id]
+		var cat: Dictionary = all.get(category, {})
+		if cat.has(id):
+			return cat[id]
 	return {}
 
 func get_skill(id: String) -> Dictionary:
-	return _cache.get("skills", {}).get("_data", {}).get(id, {})
+	var d: Dictionary = _cache.get("skills", {}).get("_data", {})
+	return d.get(id, {})
 
 func get_map(id: String) -> Dictionary:
-	return _cache.get("maps", {}).get(id, {})
+	var d: Dictionary = _cache.get("maps", {})
+	return d.get(id, {})

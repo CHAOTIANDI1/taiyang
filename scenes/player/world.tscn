@@ -1,47 +1,49 @@
-[gd_scene load_steps=6 format=3 uid="uid://b1world01taiyang"]
+[gd_scene format=3 uid="uid://55ojw8xu7y5e"]
 
-[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
-
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
-size = Vector2(28, 28)
+[ext_resource type="Script" uid="uid://dvomgqtras65k" path="res://scripts/player/player.gd" id="1_player"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_ground"]
 size = Vector2(1280, 100)
 
-[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_player"]
-size = Vector2(32, 32)
-
 [sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_ground"]
 size = Vector2(1280, 100)
 
-[node name="World" type="Node2D"]
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
+size = Vector2(28, 28)
 
-[node name="BackgroundColor" type="ColorRect" parent="."]
-offset_right = 1280.0
-offset_bottom = 720.0
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_player"]
+size = Vector2(32, 32)
+
+[node name="World" type="Node2D" unique_id=1412450894]
+
+[node name="BackgroundColor" type="ColorRect" parent="." unique_id=1442889885]
+offset_left = -3.0
+offset_top = -8.0
+offset_right = 1277.0
+offset_bottom = 712.0
 color = Color(0.15, 0.17, 0.2, 1)
 
-[node name="Ground" type="StaticBody2D" parent="."]
+[node name="Ground" type="StaticBody2D" parent="." unique_id=1124282124]
 position = Vector2(640, 620)
 
-[node name="GroundShape" type="CollisionShape2D" parent="Ground"]
+[node name="GroundShape" type="CollisionShape2D" parent="Ground" unique_id=1174028095]
 shape = SubResource("RectangleShape2D_ground")
 
-[node name="GroundSprite" type="Sprite2D" parent="Ground"]
-texture = SubResource("PlaceholderTexture2D_ground")
+[node name="GroundSprite" type="Sprite2D" parent="Ground" unique_id=869348630]
 modulate = Color(0.3, 0.3, 0.3, 1)
+texture = SubResource("PlaceholderTexture2D_ground")
 
-[node name="Player" type="CharacterBody2D" parent="."]
+[node name="Player" type="CharacterBody2D" parent="." unique_id=637104289]
 position = Vector2(640, 400)
 script = ExtResource("1_player")
 
-[node name="PlayerShape" type="CollisionShape2D" parent="Player"]
+[node name="PlayerShape" type="CollisionShape2D" parent="Player" unique_id=364544418]
 shape = SubResource("RectangleShape2D_player")
 
-[node name="PlayerSprite" type="Sprite2D" parent="Player"]
-texture = SubResource("PlaceholderTexture2D_player")
+[node name="PlayerSprite" type="Sprite2D" parent="Player" unique_id=1211476887]
 modulate = Color(0.3, 0.6, 1, 1)
+texture = SubResource("PlaceholderTexture2D_player")
 
-[node name="Camera2D" type="Camera2D" parent="Player"]
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=691648489]
 position_smoothing_enabled = true
 position_smoothing_speed = 8.0

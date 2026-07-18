@@ -16,9 +16,9 @@ func play_intro(intro_id: String, panels: Array) -> void:
 		await _play_panel(intro_id, panel)
 	sequence_finished.emit()
 
-func _play_panel(_intro_id: String, panel) -> void:
-	var text := panel.get("text", "")
-	var dur := float(panel.get("duration", 2.0))
+func _play_panel(_intro_id: String, panel: Dictionary) -> void:
+	var text: String = panel.get("text", "")
+	var dur: float = float(panel.get("duration", 2.0))
 	print("[IntroSequence] %s" % text)
 	await get_tree().create_timer(dur).timeout
 
