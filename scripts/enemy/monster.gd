@@ -1,105 +1,100 @@
 extends CharacterBody2D
-## 怪物基类 - Phase 4
+## 怪物基类 - Phase 4.1（修复版）
 ## 负责：从 monsters.json 读数据、受击扣血、死亡淡出、攻击玩家
+## 修复：加调试 print + 碰撞层分离适配
 
-# === 信号（`signal` 是 Godot 让节点之间"喊话"的机制） ===
-# 死亡时喊一声 "died"，谁监听了谁就知道
 signal died
 
 # === 怪物属性 ===
-var monster_id: String = ""        # 怪物唯一 ID（如 red_scorpion）
-var max_hp: int = 50              # 最大血量
-var current_hp: int = 50          # 当前血量
-var damage: int = 8               # 攻击力
-var move_speed: float = 120.0     # 移动速度
-var ai_template: String = ""      # AI 模板类型
-var attack_range: float = 40.0    # 攻击距离
-var attack_cooldown: float = 1.5  # 攻击冷却
-var telegraph_duration: float = 0.5  # 前摇预警时长
+var monster_id: String = ""
+var max_hp: int = 50
+var current_hp: int = 50
+var damage: int = 8
+var move_speed: float = 120.0
+var ai_template: String = ""
+var attack_range: float = 40.0
+var attack_cooldown: float = 1.5
+var telegraph_duration: float = 0.5
 
 # === 内部状态 ===
-var _attack_cd_timer: float = 0.0  # 攻击冷却计时
-var _telegraph_timer: float = 0.0  # 前摇计时
-var _is_telegraphing: bool = false  # 正在预警吗
-var _target: Node = null          # 攻击目标（玩家）
-var _is_dying: bool = false       # 正在死亡淡出吗
-var _die_timer: float = 0.0       # 死亡淡出计时
+var _attack_cd_timer: float = 0.0
+var _telegraph_timer: float = 0.0
+var _is_telegraphing: bool = false
+var _target: Node = null
+var _is_dying: bool = false
+var _die_timer: float = 0.0
 
-# === 死亡淡出时长 ===
 const DIE_FADE_DURATION: float = 0.5
+
+# === 调试开关 ===
+# 设为 true 会在控制台打印 AI 状态，帮你看逻辑
+# 验证通过后可以改成 false
+var _debug: bool = true
 
 
 func _ready() -> void:
-	# 准备阶段：从 JSON 读怪物数据
 	if monster_id != "":
 		_load_data_from_json()
-	# 过渡做法：碰一下父级找玩家节点
-	# 将来由正式的怪物管理器分配 target
+	# 找玩家节点
 	await get_tree().process_frame
 	var p: Node = get_parent().get_node_or_null("Player")
 	if p != null:
 		set_target(p)
+		if _debug:
+			print("[Monster:%s] 找到玩家目标！AI=%s HP=%d DMG=%d 速度=%f 攻击距离=%f" % [monster_id, ai_template, max_hp, damage, move_speed, attack_range])
+	else:
+		print("[Monster:%s] 警告：没找到 Player 节点！" % monster_id)
+
 
 func _physics_process(delta: float) -> void:
-	# 死亡淡出阶段：跳过所有 AI 逻辑
+	# 死亡淡出
 	if _is_dying:
 		_die_timer += delta
-		# 把当前淡出进度算出来：0 → 完全显示，1 → 完全透明
 		var progress: float = _die_timer / DIE_FADE_DURATION
-		# modulate A=0 时透明，所以用 1-progress 实现"从 1 淡到 0"
 		modulate.a = 1.0 - progress
-		# 0.5 秒后真正销毁
 		if progress >= 1.0:
-			queue_free()  # 从场景树移除并释放内存
+			queue_free()
 		return
 
-	# 冷却计时器倒计时
 	if _attack_cd_timer > 0:
 		_attack_cd_timer -= delta
 
-	# AI 模板分发
 	match ai_template:
 		"static":
-			pass  # 训练木桩不动
+			pass
 		"melee_charger":
 			_ai_melee_charger(delta)
 
 
-# AI 模板：近战冲锋型
-# 行为：走向玩家 → 进入攻击距离 → 闪红预警 0.5 秒 → 攻击
 func _ai_melee_charger(delta: float) -> void:
-	# _target 是玩家节点，必须有目标才能行动
 	if _target == null or not is_instance_valid(_target):
 		return
 
-	# 算出到玩家的距离向量
 	var to_player: Vector2 = _target.global_position - global_position
-	# length() 返回向量长度（两点距离）
 	var distance: float = to_player.length()
 
-	# 状态切换：正在预警 vs 平时
 	if _is_telegraphing:
-		# 预警中：停止移动，倒计时
+		# 预警中
 		_telegraph_timer -= delta
-		# 预警时身体闪红（modulate 红色增强）
 		modulate = Color(2.0, 0.5, 0.5, 1.0)
 		if _telegraph_timer <= 0:
-			# 预警结束，执行攻击
+			if _debug:
+				print("[Monster:%s] 预警结束，执行攻击！伤害=%d" % [monster_id, damage])
 			_do_attack()
 			_is_telegraphing = false
 			_attack_cd_timer = attack_cooldown
 			modulate = Color(1, 1, 1, 1)
 	else:
-		# 恢复原色
 		modulate = Color(1, 1, 1, 1)
 
-		# 还在攻击距离内且 CD 好了 → 启动预警
 		if distance <= attack_range and _attack_cd_timer <= 0:
+			# 进入攻击距离 + CD 好了 → 预警
+			if _debug:
+				print("[Monster:%s] 进入攻击距离(%.0f<=%.0f)，开始预警..." % [monster_id, distance, attack_range])
 			_is_telegraphing = true
 			_telegraph_timer = telegraph_duration
 		elif distance > attack_range:
-			# 不在攻击距离内 → 走向玩家
-			# direction = 目标方向（单位向量，长度=1）
+			# 不在攻击距离 → 走向玩家
 			var direction: Vector2 = to_player.normalized()
 			velocity = direction * move_speed
 			move_and_slide()
@@ -109,43 +104,42 @@ func _ai_melee_charger(delta: float) -> void:
 			move_and_slide()
 
 
-# 执行攻击（Phase 4：接玩家受伤）
-# docs/02-战斗系统.md：怪物预警结束后攻击，调用玩家 take_damage
 func _do_attack() -> void:
-	# 确认目标有效且能受伤
 	if _target == null or not is_instance_valid(_target):
+		if _debug:
+			print("[Monster:%s] 攻击失败：目标无效" % monster_id)
 		return
-	# 用 has_method 检测，不依赖具体类型（与 player.gd 命中检测一致）
 	if _target.has_method("take_damage"):
+		if _debug:
+			print("[Monster:%s] 命中玩家！调用 take_damage(%d)" % [monster_id, damage])
 		_target.take_damage(damage)
+	else:
+		if _debug:
+			print("[Monster:%s] 目标没有 take_damage 方法" % monster_id)
 
 
-# 被攻击时调这个函数
-# amount = 扣多少血
 func take_damage(amount: int) -> void:
 	if _is_dying:
 		return
 	current_hp -= amount
-	# 受击闪白 0.1 秒
+	if _debug:
+		print("[Monster:%s] 受击！扣 %d，剩余 %d/%d" % [monster_id, amount, current_hp, max_hp])
 	modulate = Color(3.0, 3.0, 3.0, 1.0)
-	# 用 Tween 实现"0.1 秒内从白恢复到原色"
-	# Godot 4 中类型叫 Tween（不是 Godot 3 的 SceneTreeTween）
 	var t: Tween = create_tween()
 	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
 
-	# 血量到 0 → 死亡
 	if current_hp <= 0:
 		start_dying()
 
 
-# 开始死亡淡出
 func start_dying() -> void:
 	_is_dying = true
 	_die_timer = 0.0
 	emit_signal("died")
+	if _debug:
+		print("[Monster:%s] 死亡！" % monster_id)
 
 
-# 从 JSON 加载怪物数据
 func _load_data_from_json() -> void:
 	var data: Dictionary = DataManager.get_monster(monster_id)
 	if data.is_empty():
@@ -161,6 +155,5 @@ func _load_data_from_json() -> void:
 	current_hp = max_hp
 
 
-# 供 AI 初始化时设玩家目标
 func set_target(target: Node) -> void:
 	_target = target

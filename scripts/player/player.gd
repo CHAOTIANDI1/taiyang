@@ -1,26 +1,23 @@
 extends CharacterBody2D
-## 角色脚本 - Phase 4
+## 角色脚本 - Phase 4.1（修复版）
 ## WASD 移动 + J 攻击（带 hitbox 命中判定 + 屏震 + 飘字 + 闪白）
 ## 受伤 + 死亡 + 重生（无惩罚，回安全点）
+## 修复：hitbox 排除自己 + 攻击冷却 + 闪白更明显 + 调试 print
 
 # export 让你在 Godot 编辑器右侧"检查器"里改这个值
-# 不用动代码就能调速度
 @export var speed: float = 250.0
 @export var attack_duration: float = 0.2
-@export var attack_damage: int = 10  # MVP 占位基础伤害，将来从 equipment.json 读
+@export var attack_damage: int = 10  # MVP 占位基础伤害
+@export var attack_cooldown: float = 0.5  # 攻击冷却（秒），和动画时长分开
 
 # === 血量 ===
-# max_hp 从 characters.json 读（数据驱动，§1.2）
 var max_hp: int = 100
 var current_hp: int = 100
 
 # === 重生安全点 ===
-# docs/02-战斗系统.md：每个地图标记自己的安全点，死亡时传送过去
-# MVP 过渡：用初始位置作为安全点，将来从 maps.json 读
 var _safe_position: Vector2 = Vector2(400, 400)
 
 # === 受伤无敌帧 ===
-# 受击后短暂无敌，防多帧连续扣血
 var _invincible_timer: float = 0.0
 const INVINCIBLE_DURATION: float = 0.5
 
@@ -29,43 +26,48 @@ var _is_dying: bool = false
 var _die_timer: float = 0.0
 const DIE_FADE_DURATION: float = 0.8
 
-# 攻击状态计时
-var _attack_timer: float = 0.0
-var _attack_hit: bool = false   # 本次攻击是否已经命中过（防多帧重复扣）
+# === 攻击状态 ===
+var _attack_timer: float = 0.0        # 攻击动画计时
+var _attack_cd_timer: float = 0.0     # 攻击冷却计时
+var _attack_hit: bool = false         # 本次攻击是否已命中
 
-# 当前面向方向（决定攻击 box 在角色哪一侧）
-var _facing: Vector2 = Vector2(1, 0)   # 默认朝右
+# 当前面向方向
+var _facing: Vector2 = Vector2(1, 0)
 
-# 攻击判定区（Area2D + 碰撞形）
+# 攻击判定区
 var _hitbox_area: Area2D
 var _hitbox_shape: CollisionShape2D
-# 默认 hitbox 配置
 var _hitbox_width: float = 50.0
 var _hitbox_height: float = 50.0
 var _hitbox_offset: float = 35.0
 
 
 func _ready() -> void:
-	# 从 characters.json 读初始 HP（数据驱动 §1.2）
 	_load_character_data()
-	# 记录初始位置作为安全点
 	_safe_position = global_position
 
-	# 创建攻击判定区域（Area2D）
-	# Area2D 是 Godot 的"区域检测器"，物体进入会发信号
+	# 创建攻击判定区域
 	_hitbox_area = Area2D.new()
 	_hitbox_area.name = "AttackHitbox"
 	add_child(_hitbox_area)
 
-	# 在 Area2D 里加一个矩形碰撞形
 	_hitbox_shape = CollisionShape2D.new()
 	var rect: RectangleShape2D = RectangleShape2D.new()
 	rect.size = Vector2(_hitbox_width, _hitbox_height)
 	_hitbox_shape.shape = rect
 	_hitbox_area.add_child(_hitbox_shape)
 
-	# 默认攻击范围关闭（只在按下 J 时短时间激活）
+	# 默认关闭
 	_hitbox_area.monitoring = false
+
+	# === 修复 1：设置碰撞层 ===
+	# 玩家自己在 layer 2，hitbox 的 mask 设为 layer 4（怪物专用检测层）
+	# 这样 hitbox 只检测怪物，不检测玩家自己
+	# layer 是"自己在哪层"，mask 是"自己检测哪层"
+	# 玩家 collision_layer=2（在 world.tscn 设置）
+	# 怪物 collision_layer=4（在 world.tscn 设置）
+	# hitbox Area2D：mask=4（只检测 layer 4 的怪物）
+	_hitbox_area.collision_mask = 4  # 只检测怪物层
 
 
 # 从 data/characters.json 读角色初始属性
@@ -80,7 +82,7 @@ func _load_character_data() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# === 死亡淡出阶段 ===
+	# === 死亡淡出 ===
 	if _is_dying:
 		_die_timer += delta
 		var progress: float = _die_timer / DIE_FADE_DURATION
@@ -93,146 +95,123 @@ func _physics_process(delta: float) -> void:
 	if _invincible_timer > 0:
 		_invincible_timer -= delta
 
+	# === 攻击冷却倒计时 ===
+	if _attack_cd_timer > 0:
+		_attack_cd_timer -= delta
+
 	# === 移动 ===
-	# get_vector 读多个动作名，一次返回标准化方向向量
 	var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
 	velocity = direction * speed
 	move_and_slide()
 
-	# 记住面向方向（不动时保持上次方向）
 	if direction != Vector2.ZERO:
 		_facing = direction.normalized()
 
-	# === 攻击状态倒计时 ===
+	# === 攻击动画计时 ===
 	if _attack_timer > 0:
 		_attack_timer -= delta
-		# 攻击中角色闪白
-		modulate = Color(2.0, 2.0, 2.0, 1.0)
-		# 攻击期间 hitbox 激活
+		# 攻击中闪白
+		modulate = Color(3.0, 3.0, 3.0, 1.0)
 		_hitbox_area.monitoring = true
-		# hitbox 跟随面向方向移动
 		_update_hitbox_position()
-		# 触发一次命中检测
 		if not _attack_hit:
 			_check_hit()
 	else:
-		# 非攻击且非无敌时恢复原色
 		if _invincible_timer <= 0:
 			modulate = Color(1, 1, 1, 1)
 		_hitbox_area.monitoring = false
 		_attack_hit = false
 
-	# === 触发攻击 ===
-	# is_action_just_pressed 只在这帧第一次按下了才触发
-	if Input.is_action_just_pressed("attack") and _attack_timer <= 0:
+	# === 触发攻击（检查冷却）===
+	if Input.is_action_just_pressed("attack") and _attack_cd_timer <= 0:
 		_start_attack()
 
 
 func _start_attack() -> void:
 	_attack_timer = attack_duration
+	_attack_cd_timer = attack_cooldown  # 进入冷却
 	_attack_hit = false
-	# 攻击时屏震一下（调摄像机的偏移）
 	_shake_camera(2.0, 0.1)
 
 
-# 把 hitbox 摆到角色面向方向的前方
 func _update_hitbox_position() -> void:
-	# Area2D 位置 = 面向方向 × 偏移距离
 	_hitbox_area.position = _facing * _hitbox_offset
 
 
-# 检测当前攻击是否命中了怪物（防多帧重复扣）
+# 修复 2：检测命中时排除自己
 func _check_hit() -> void:
-	# get_overlapping_bodies 拿到所有跟 Area2D 重叠的物理体
 	var bodies: Array = _hitbox_area.get_overlapping_bodies()
 	for body in bodies:
-		# 检查是不是 monster.gd 挂的节点
-		# has_method("take_damage") 是个简单又不依赖具体类型的方法
+		# === 关键修复：排除玩家自己 ===
+		# Phase 4 新增 take_damage 后，hitbox 会检测到自己
+		# 必须跳过自己，否则按 J 就自己打自己
+		if body == self:
+			continue
 		if body.has_method("take_damage"):
 			body.take_damage(attack_damage)
-			_attack_hit = true  # 这次攻击命中过了
-			# 飘出伤害数字
+			_attack_hit = true
 			_spawn_damage_number(attack_damage, body.global_position)
-			# 命中时小屏震
 			_shake_camera(3.0, 0.08)
-			break  # MVP 一次攻击只命中一个怪
+			break
 
 
-# 屏震：偏移摄像机再让它归位
 func _shake_camera(intensity: float, duration: float) -> void:
 	var cam: Camera2D = get_node_or_null("Camera2D")
 	if cam == null:
 		return
-	# 用 Tween 让摄像机抖一下
-	# Tween 在 Godot 4 是"补间动画"工具
 	var t: Tween = create_tween()
-	# 第一段：从随机偏移 → 0，duration 秒
 	var offset: Vector2 = Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity))
 	cam.offset = offset
 	t.tween_property(cam, "offset", Vector2.ZERO, duration)
 
 
-# 飘伤害数字（用 Label 节点 + Tween）
-func _spawn_damage_number(amount: int, position: Vector2) -> void:
-	# 创一个 Label 节点（文字）
+func _spawn_damage_number(amount: int, pos: Vector2) -> void:
 	var label: Label = Label.new()
 	label.text = str(amount)
-	label.position = position + Vector2(0, -20)   # 在怪头上偏上 20
-	label.modulate = Color(1, 0.5, 0.5, 1)  # 红色
-	# 必须加到场景树才能看见
+	label.position = pos + Vector2(0, -20)
+	label.modulate = Color(1, 0.5, 0.5, 1)
 	get_parent().add_child(label)
 
-	# 用 Tween 让数字上飘 + 淡出
 	var t: Tween = create_tween()
-	# parallel() 让两个 tween 并行（同时）执行
 	t.parallel().tween_property(label, "position:y", label.position.y - 40, 0.6)
 	t.parallel().tween_property(label, "modulate:a", 0.0, 0.6)
-	# 0.6 秒后销毁 Label
 	t.chain().tween_callback(label.queue_free)
 
 
-# === 玩家受伤（Phase 4 新增）===
-# docs/02-战斗系统.md：无死亡惩罚，回安全点重生
+# === 玩家受伤 ===
 func take_damage(amount: int) -> void:
-	# 死亡中或无敌帧内不扣血
 	if _is_dying:
 		return
 	if _invincible_timer > 0:
+		print("[Player] 无敌帧内，忽略伤害 %d" % amount)
 		return
 
 	current_hp -= amount
+	print("[Player] 受伤！扣 %d，剩余 %d/%d" % [amount, current_hp, max_hp])
 
-	# 受击闪白 0.1 秒（与 monster.gd 一致的打击感）
-	modulate = Color(3.0, 3.0, 3.0, 1.0)
+	# 修复 3：闪白更明显（0.15 秒 + 更极端的颜色）
+	modulate = Color(8.0, 8.0, 8.0, 1.0)
 	var t: Tween = create_tween()
-	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
+	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.15)
 
-	# 飘出伤害数字（红色，让玩家看到掉了多少血）
 	_spawn_damage_number(amount, global_position)
+	_shake_camera(5.0, 0.15)  # 屏震也加强
 
-	# 受击屏震
-	_shake_camera(4.0, 0.1)
-
-	# 启动无敌帧
 	_invincible_timer = INVINCIBLE_DURATION
 
-	# 血量归零 → 死亡
 	if current_hp <= 0:
 		current_hp = 0
 		_start_dying()
 
 
-# 开始死亡淡出
 func _start_dying() -> void:
 	_is_dying = true
 	_die_timer = 0.0
-	# 死亡时停止移动和攻击
 	velocity = Vector2.ZERO
 	_hitbox_area.monitoring = false
+	print("[Player] 死亡！开始淡出...")
 
 
-# 重生：传送到安全点，恢复血量
-# docs/02-战斗系统.md：无死亡惩罚（不掉落、不扣经验、不扣金币）
 func _respawn() -> void:
 	_is_dying = false
 	_die_timer = 0.0
@@ -240,3 +219,4 @@ func _respawn() -> void:
 	modulate.a = 1.0
 	modulate = Color(1, 1, 1, 1)
 	global_position = _safe_position
+	print("[Player] 重生！血量恢复 %d/%d" % [current_hp, max_hp])
