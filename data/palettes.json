@@ -1,0 +1,10 @@
+{
+  "_meta": {
+    "file": "palettes.json",
+    "desc": "美术调色板",
+    "schema_example": {
+      "main": ["#1a1a2e", "#16213e", "#ff6b6b"]
+    }
+  },
+  "_data": {}
+}

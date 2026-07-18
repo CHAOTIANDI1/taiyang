@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "file": "npcs.json",
+    "desc": "NPC配置",
+    "schema_example": {
+      "<npc_id>": {
+        "name": "<NPC名>",
+        "map": "<map_id>",
+        "pos": [100, 200],
+        "dialogue_id": "<dialogue_id>",
+        "role": "village_headman|merchant|blacksmith|job_mentor|subprof_npc|misc"
+      }
+    }
+  },
+  "_data": {}
+}

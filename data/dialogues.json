@@ -1,0 +1,14 @@
+{
+  "_meta": {
+    "file": "dialogues.json",
+    "desc": "NPC对话文本",
+    "schema_example": {
+      "<dialogue_id>": {
+        "speaker": "<NPC名>",
+        "lines": ["第一句", "第二句"],
+        "choices": [{"text": "选项A", "next": "<other_id>"}]
+      }
+    }
+  },
+  "_data": {}
+}

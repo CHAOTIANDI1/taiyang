@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "file": "mails.json",
+    "desc": "邮件系统配置",
+    "schema_example": {
+      "system_mail_<id>": {
+        "title": "<标题>",
+        "body": "<正文>",
+        "attachment": {"item_id": "<id>", "count": 1},
+        "expire_hours": 24,
+        " Persistent": false
+      }
+    }
+  },
+  "_default_expire_hours": 24,
+  "system_mails": {}
+}

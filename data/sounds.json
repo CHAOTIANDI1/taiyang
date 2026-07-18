@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "file": "sounds.json",
+    "desc": "音效/音乐配置",
+    "schema_example": {
+      "<sound_id>": {
+        "file": "<相对assets/audio的路径>",
+        "loop": true,
+        "volume": 0.6,
+        "category": "bgm|sfx|ambient|ui"
+      }
+    }
+  },
+  "_data": {}
+}

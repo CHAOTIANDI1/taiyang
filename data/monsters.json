@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "file": "monsters.json",
+    "desc": "怪物属性数据表",
+    "schema_example": {
+      "<monster_id>": {
+        "name": "<显示名>",
+        "hp": 50,
+        "damage": 12,
+        "speed": 80,
+        "ai_template": "melee_charger",
+        "drops": [{"item_id": "<id>", "chance": 0.3}]
+      }
+    }
+  },
+  "_data": {}
+}

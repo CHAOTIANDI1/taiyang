@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "file": "recipes.json",
+    "desc": "食谱/配方表",
+    "schema_example": {
+      "<recipe_id>": {
+        "name": "<菜名>",
+        "category": "cooking|alchemy|pharmacy",
+        "materials": [{"item_id": "<id>", "count": 2}],
+        "product": {"item_id": "<id>", "count": 1},
+        "min_subprof_level": 1
+      }
+    }
+  },
+  "_data": {}
+}

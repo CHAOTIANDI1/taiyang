@@ -1,0 +1,22 @@
+{
+  "_meta": {
+    "file": "characters.json",
+    "desc": "角色基础属性",
+    "initial_level": 1,
+    "initial_attributes_per_level": 5,
+    "pre_job_cap": 15,
+    "job_requirements": {
+      "swordsman": {"STR": 15, "DEF": 10}
+    }
+  },
+  "initial": {
+    "HP": 100,
+    "MP": 30,
+    "STR": 5,
+    "MAG": 5,
+    "DEF": 5,
+    "MDEF": 5,
+    "attribute_points_per_level": 3,
+    "mp_regen_per_second": 2
+  }
+}

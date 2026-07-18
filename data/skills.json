@@ -1,0 +1,18 @@
+{
+  "_meta": {
+    "file": "skills.json",
+    "desc": "技能数据表",
+    "schema_example": {
+      "<skill_id>": {
+        "name": "<显示名>",
+        "source": "weapon|armor|class|skill_book",
+        "type": "basic|core|burst",
+        "damage_multiplier": 1.5,
+        "cooldown": 2.0,
+        "mp_cost": 10,
+        "description": "<说明>"
+      }
+    }
+  },
+  "_data": {}
+}

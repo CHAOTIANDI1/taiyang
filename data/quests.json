@@ -1,0 +1,16 @@
+{
+  "_meta": {
+    "file": "quests.json",
+    "desc": "任务配置",
+    "schema_example": {
+      "<quest_id>": {
+        "name": "<任务名>",
+        "chapter": 1,
+        "node": 1,
+        "trigger": {"type": "location|kill|item|talk", "target": "<id>"},
+        "rewards": {"xp": 50, "gold": 30, "items": [{"item_id": "<id>", "count": 1}]}
+      }
+    }
+  },
+  "_data": {}
+}

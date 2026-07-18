@@ -1,0 +1,71 @@
+{
+  "_meta": {
+    "file": "items.json",
+    "desc": "物品数据表（含重要物品、道具、材料等）",
+    "schema_example": {
+      "<item_id>": {
+        "name": "<显示名>",
+        "category": "important|usable|weapon|armor|food|material|sub_prof|skill_book",
+        "rarity": "white|green|blue|purple|gold",
+        "description": "<说明文字>",
+        "tradeable": true
+      }
+    }
+  },
+  "important": {
+    "mark_solar_boss_01": {
+      "name": "太阳印记（[BossName]）",
+      "category": "important",
+      "rarity": "gold",
+      "description": "从暗影精英怪[BossName]身上掉落的发光符号。散发着温暖的微光，握在手心时仿佛能看到什么……",
+      "tradeable": false
+    },
+    "pet_egg_01": {
+      "name": "宠物蛋（小白虎）",
+      "category": "important",
+      "rarity": "green",
+      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "tradeable": false
+    },
+    "pet_egg_02": {
+      "name": "宠物蛋（红尾狐）",
+      "category": "important",
+      "rarity": "green",
+      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "tradeable": false
+    },
+    "pet_egg_03": {
+      "name": "宠物蛋（青鳞龟）",
+      "category": "important",
+      "rarity": "green",
+      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "tradeable": false
+    },
+    "subprof_credential_fishing": {
+      "name": "钓鱼职业凭证",
+      "category": "important",
+      "rarity": "white",
+      "description": "完成钓鱼体验任务后获得，需提交给 NPC 才算正式学习。",
+      "tradeable": false
+    },
+    "subprof_credential_cooking": {
+      "name": "烹饪职业凭证",
+      "category": "important",
+      "rarity": "white",
+      "description": "完成烹饪体验任务后获得，需提交给 NPC 才算正式学习。",
+      "tradeable": false
+    },
+    "free_stat_reset_token": {
+      "name": "免费洗点道具",
+      "category": "important",
+      "rarity": "white",
+      "description": "在转职 NPC 处一次性领取，使用后属性点重置。",
+      "tradeable": false
+    }
+  },
+  "usable": {},
+  "material": {},
+  "food": {},
+  "sub_prof": {},
+  "skill_book": {}
+}

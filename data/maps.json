@@ -1,0 +1,53 @@
+{
+  "_meta": {
+    "file": "maps.json",
+    "desc": "地图配置",
+    "schema_example": {
+      "<map_id>": {
+        "name": "<地图显示名>",
+        "scene": "res://scenes/maps/<file>.tscn",
+        "exits": [{"id": "<exit_id>", "target_map": "<map_id>", "spawn_pos": [100, 200]}],
+        "safe_point": [400, 300]
+      }
+    }
+  },
+  "home_yard": {
+    "name": "玩家的家·院子",
+    "scene": "res://scenes/maps/home_yard.tscn",
+    "exits": [{"id": "to_village", "target_map": "newbie_village", "spawn_pos": [400, 300]}],
+    "safe_point": [200, 200]
+  },
+  "newbie_village": {
+    "name": "新手村",
+    "scene": "res://scenes/maps/newbie_village.tscn",
+    "exits": [
+      {"id": "to_home", "target_map": "home_yard", "spawn_pos": [100, 200]},
+      {"id": "to_wild_a", "target_map": "wild_a_sunny_path", "spawn_pos": [100, 300]}
+    ],
+    "safe_point": [400, 300]
+  },
+  "wild_a_sunny_path": {
+    "name": "野外A·晴原小径",
+    "scene": "res://scenes/maps/wild_a_sunny_path.tscn",
+    "exits": [
+      {"id": "to_village", "target_map": "newbie_village", "spawn_pos": [800, 300]},
+      {"id": "to_wild_b", "target_map": "wild_b_dark_edge", "spawn_pos": [100, 300]}
+    ],
+    "safe_point": [400, 300]
+  },
+  "wild_b_dark_edge": {
+    "name": "野外B·林暗边缘",
+    "scene": "res://scenes/maps/wild_b_dark_edge.tscn",
+    "exits": [
+      {"id": "to_wild_a", "target_map": "wild_a_sunny_path", "spawn_pos": [800, 300]},
+      {"id": "to_town", "target_map": "small_town", "spawn_pos": [100, 300]}
+    ],
+    "safe_point": [400, 300]
+  },
+  "small_town": {
+    "name": "小城镇",
+    "scene": "res://scenes/maps/small_town.tscn",
+    "exits": [{"id": "to_wild_b", "target_map": "wild_b_dark_edge", "spawn_pos": [800, 300]}],
+    "safe_point": [400, 300]
+  }
+}

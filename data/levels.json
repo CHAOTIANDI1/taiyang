@@ -1,0 +1,17 @@
+{
+  "_meta": {
+    "file": "levels.json",
+    "desc": "等级XP表",
+    "formula": "NEXT_LEVEL_XP = BASE * level^GROWTH_RATE",
+    "BASE": 80,
+    "GROWTH_RATE": 1.5,
+    "max_pre_job": 15,
+    "max_mvp": 20,
+    "schema_example": {
+      "level": 1,
+      "next_xp": 80
+    }
+  },
+  "pre_job_cap": 15,
+  "levels": []
+}

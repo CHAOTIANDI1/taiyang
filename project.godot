@@ -1,0 +1,30 @@
+[application]
+
+config/name="太阳之下 (Under the Sun)"
+config/description="2D 俯视角实时动作冒险 RPG - MVP 版本"
+run/main_scene="res://scenes/player/world.tscn"
+config/features=PackagedStringArray4("4.7", "GL Compatibility")
+
+[autoload]
+
+DataManager="*res://scripts/core/data_manager.gd"
+SaveManager="*res://scripts/core/save_manager.gd"
+GameTime="*res://scripts/core/game_time.gd"
+MailManager="*res://scripts/core/mail_manager.gd"
+IntroSequence="*res://scripts/core/intro_sequence.gd"
+AudioManager="*res://scripts/core/audio_manager.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/resizable=true
+window/size/mode=3
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0

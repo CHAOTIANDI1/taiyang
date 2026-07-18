@@ -1,0 +1,15 @@
+{
+  "_meta": {
+    "file": "timers.json",
+    "desc": "等待时长配置（种植/炼金/孵化等）",
+    "unit": "seconds",
+    "schema_example": {
+      "plant_<crop_id>": 3600,
+      "alch_<recipe_id>": 600,
+      "pet_egg_hatch": 3
+    }
+  },
+  "pet_egg_hatch": 3,
+  "plant_crops": {},
+  "alchemy_transmute": {}
+}

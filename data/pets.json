@@ -1,0 +1,50 @@
+{
+  "_meta": {
+    "file": "pets.json",
+    "desc": "宠物配置",
+    "schema_example": {
+      "<pet_id>": {
+        "name": "<宠物名>",
+        "base_pet_id": "pet_egg_01",
+        "species": "<品种名>",
+        "hp": 50,
+        "damage": 8,
+        "skill_id": "<技能id>",
+        "tame_material_id": "<驯服材料id>",
+        "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
+      }
+    }
+  },
+  "_data": {
+    "pet_001_white_tiger": {
+      "name": "小白虎",
+      "base_pet_id": "pet_egg_01",
+      "species": "白虎",
+      "hp": 60,
+      "damage": 10,
+      "skill_id": "pet_bite_001",
+      "tame_material_id": "material_meat_001",
+      "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
+    },
+    "pet_002_red_fox": {
+      "name": "红尾狐",
+      "base_pet_id": "pet_egg_02",
+      "species": "红狐",
+      "hp": 40,
+      "damage": 14,
+      "skill_id": "pet_fire_breath_002",
+      "tame_material_id": "material_fish_001",
+      "breakthrough_bonus_per_10_lv": {"crit_pct": 1}
+    },
+    "pet_003_green_turtle": {
+      "name": "青鳞龟",
+      "base_pet_id": "pet_egg_03",
+      "species": "青龟",
+      "hp": 100,
+      "damage": 6,
+      "skill_id": "pet_shield_003",
+      "tame_material_id": "material_grass_001",
+      "breakthrough_bonus_per_10_lv": {"defense_pct": 3}
+    }
+  }
+}

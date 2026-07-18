@@ -1,0 +1,19 @@
+{
+  "_meta": {
+    "file": "equipment.json",
+    "desc": "装备数据表",
+    "schema_example": {
+      "<equip_id>": {
+        "name": "<显示名>",
+        "category": "weapon|armor",
+        "rarity": "white|green|blue|purple|gold",
+        "attack": 10,
+        "defense": 5,
+        "durability_max": 100,
+        "skill_id": "<附带技能id>",
+        "tradeable": true
+      }
+    }
+  },
+  "_data": {}
+}
