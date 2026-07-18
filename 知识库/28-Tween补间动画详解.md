@@ -6,6 +6,14 @@
 
 生活比喻：你跟出租车说"从这到那 0.6 秒内到"——中间走哪条路、什么时候快什么时候慢，司机自己决定。你不用每秒喊"现在到 50% 距离了"。
 
+### ⚠ 历史教训（v2.5 §1.4 第 9 项补记）
+
+**Godot 4 里类型名是 `Tween`**，不是 `SceneTreeTween`。
+- `SceneTreeTween` 是 Godot 3 的旧名字
+- Godot 4 已经简化为 `Tween`
+- 写 `var t: SceneTreeTween` 会报 `Could not find type "SceneTreeTween"`
+- **正确写法**：`var t: Tween = create_tween()`
+
 ## 功能
 
 - 让节点的属性（位置、颜色、缩放等）从一个值**平滑过渡**到另一个值
@@ -19,42 +27,38 @@
 
 ```gdscript
 # 0.6 秒内把 label 的 y 坐标从当前值飞到 -40
-var t: SceneTreeTween = create_tween()
+var t: Tween = create_tween()  # ✅ Godot 4 写法
 t.tween_property(label, "position:y", label.position.y - 40, 0.6)
 ```
-
-`SceneTreeTween` 是返回类型，不要用 `:=` 推断（GDScript 4.7 严格模式）——用 `var t: SceneTreeTween`。
 
 ### 并行：同时两个动画
 
 ```gdscript
-var t = create_tween()
-# parallel() 后下一个 tween 和它同时跑
+var t: Tween = create_tween()
 t.parallel().tween_property(label, "position:y", label.position.y - 40, 0.6)
 t.parallel().tween_property(label, "modulate:a", 0.0, 0.6)
-# 6 秒内：数字上飘 40 像素 + 同时淡出
 ```
 
 ### 链式：一段接一段
 
 ```gdscript
-var t = create_tween()
+var t: Tween = create_tween()
 t.tween_property(box, "position:x", 100, 0.3)
-t.chain().tween_callback(box.queue_free)  # 0.3 秒后销毁
+t.chain().tween_callback(box.queue_free)
 ```
 
 ### 缓动曲线
 
 ```gdscript
 t.tween_property(box, "position", target, 0.5)
- .set_trans(Tween.TRANS_SINE)  # 正弦（绵软感）
- .set_ease(Tween.EASE_OUT)     # 先快后慢（自然感）
+ .set_trans(Tween.TRANS_SINE)
+ .set_ease(Tween.EASE_OUT)
 ```
 
 | 缓动 | 感觉 |
 |------|------|
-| EASE_OUT | 先快后慢——自然 |
-| EASE_IN | 先慢后快——机械 |
+| EASE_OUT | 先快后慢 |
+| EASE_IN | 先慢后快 |
 | EASE_IN_OUT | 两端慢中间快 |
 | TRANS_SINE | 圆滑 |
 | TRANS_BOUNCE | 弹一下 |
@@ -64,14 +68,6 @@ t.tween_property(box, "position", target, 0.5)
 
 **插值**：给起点 A 和终点 B，按时间百分比 t 算 `A + (B-A) * 缓动函数(t)`。
 
-每帧 Godot 内部：
-1. 更新 Tween 的进度
-2. 用缓动函数算当前值
-3. 写回节点属性
-4. 渲染
-
-不在物理帧（_physics_process）而在渲染帧跑。
-
 ## 优势
 
 | 优势 | 说明 |
@@ -79,16 +75,7 @@ t.tween_property(box, "position", target, 0.5)
 | 写一行做完整动画 | 不用每帧算坐标 |
 | 自动跟随帧率 | 60fps 和 30fps 看起来一样 |
 | 性能好 | 内部 C++ 实现 |
-| 销毁节点方便 | `chain().tween_callback(queue_free)` |
-
-## 使用场景
-
-- 伤害数字上飘淡出（我们 player.gd 当前用法）
-- 攻击受击闪白恢复（monster.gd 的 take_damage）
-- 开场画面淡入
-- 摄像机屏震回弹
-- UI 弹窗出现/消失
-- Boss 死亡淡出
+| 销毁节点方便 | chain + tween_callback |
 
 ## 我们代码中 3 处用 Tween
 
@@ -100,11 +87,12 @@ t.tween_property(box, "position", target, 0.5)
 
 ## 常见错误
 
-| 错误 | 原因 |
-|------|------|
-| `var t := create_tween()` 4.7 报错 | 返回 SceneTreeTween 是 Variant，要 `var t: SceneTreeTween = create_tween()` |
-| Tween 跑了一半节点被销毁 | 错误发生——用 chain + tween_callback 顺序销毁 |
-| Tween 让节点"闪现"到终点 | 没给起点直接给终点，Tween 会先瞬移再过渡 |
+| 错误 | 原因 | 修复 |
+|------|------|------|
+| `Could not find type "SceneTreeTween"` | 用了 Godot 3 老名 | 改成 `Tween` |
+| `var t := create_tween()` 推断失败 | 返回类型 `Tween` 但有时编译器推断不稳 | 显式 `var t: Tween = create_tween()` |
+| Tween 跑到一半节点已销毁 | 调用顺序问题 | 用 `chain + tween_callback(queue_free)` |
+| Tween 让节点"闪烁到终点" | 没指定起点直接指定终点 | 先设起点，再 tween 到终点 |
 
 ---
 
