@@ -113,7 +113,7 @@ func _shake_camera(intensity: float, duration: float) -> void:
 		return
 	# 用 Tween 让摄像机抖一下
 	# Tween 在 Godot 4 是"补间动画"工具
-	var t: SceneTreeTween = create_tween()
+	var t: Tween = create_tween()
 	# 第一段：从随机偏移 → 0，duration 秒
 	var offset: Vector2 = Vector2(randf_range(-intensity, intensity), randf_range(-intensity, intensity))
 	cam.offset = offset
@@ -131,7 +131,7 @@ func _spawn_damage_number(amount: int, position: Vector2) -> void:
 	get_parent().add_child(label)
 
 	# 用 Tween 让数字上飘 + 淡出
-	var t: SceneTreeTween = create_tween()
+	var t: Tween = create_tween()
 	# parallel() 让两个 tween 并行（同时）执行
 	t.parallel().tween_property(label, "position:y", label.position.y - 40, 0.6)
 	t.parallel().tween_property(label, "modulate:a", 0.0, 0.6)

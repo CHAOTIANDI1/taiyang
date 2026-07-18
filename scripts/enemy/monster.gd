@@ -124,8 +124,8 @@ func take_damage(amount: int) -> void:
 	# 受击闪白 0.1 秒
 	modulate = Color(3.0, 3.0, 3.0, 1.0)
 	# 用 Tween 实现"0.1 秒内从白恢复到原色"
-	# create_tween() 是 Godot 4 自带的补间动画工具
-	var t: SceneTreeTween = create_tween()
+	# Godot 4 中类型叫 Tween（不是 Godot 3 的 SceneTreeTween）
+	var t: Tween = create_tween()
 	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
 
 	# 血量到 0 → 死亡
