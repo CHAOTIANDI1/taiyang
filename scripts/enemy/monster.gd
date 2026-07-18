@@ -1,6 +1,6 @@
 extends CharacterBody2D
-## 怪物基类 - Phase 3
-## 负责：从 monsters.json 读数据、受击扣血、死亡淡出
+## 怪物基类 - Phase 4
+## 负责：从 monsters.json 读数据、受击扣血、死亡淡出、攻击玩家
 
 # === 信号（`signal` 是 Godot 让节点之间"喊话"的机制） ===
 # 死亡时喊一声 "died"，谁监听了谁就知道
@@ -109,10 +109,15 @@ func _ai_melee_charger(delta: float) -> void:
 			move_and_slide()
 
 
-# 执行攻击（将来在 Phase 5 接玩家受伤）
+# 执行攻击（Phase 4：接玩家受伤）
+# docs/02-战斗系统.md：怪物预警结束后攻击，调用玩家 take_damage
 func _do_attack() -> void:
-	# 占位：打印 + 将来调用 _target.take_damage(damage)
-	print("[Monster] %s 攻击！" % monster_id)
+	# 确认目标有效且能受伤
+	if _target == null or not is_instance_valid(_target):
+		return
+	# 用 has_method 检测，不依赖具体类型（与 player.gd 命中检测一致）
+	if _target.has_method("take_damage"):
+		_target.take_damage(damage)
 
 
 # 被攻击时调这个函数

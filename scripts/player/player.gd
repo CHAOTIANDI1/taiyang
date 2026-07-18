@@ -1,12 +1,33 @@
 extends CharacterBody2D
-## 角色脚本 - Phase 3
+## 角色脚本 - Phase 4
 ## WASD 移动 + J 攻击（带 hitbox 命中判定 + 屏震 + 飘字 + 闪白）
+## 受伤 + 死亡 + 重生（无惩罚，回安全点）
 
 # export 让你在 Godot 编辑器右侧"检查器"里改这个值
 # 不用动代码就能调速度
 @export var speed: float = 250.0
 @export var attack_duration: float = 0.2
 @export var attack_damage: int = 10  # MVP 占位基础伤害，将来从 equipment.json 读
+
+# === 血量 ===
+# max_hp 从 characters.json 读（数据驱动，§1.2）
+var max_hp: int = 100
+var current_hp: int = 100
+
+# === 重生安全点 ===
+# docs/02-战斗系统.md：每个地图标记自己的安全点，死亡时传送过去
+# MVP 过渡：用初始位置作为安全点，将来从 maps.json 读
+var _safe_position: Vector2 = Vector2(400, 400)
+
+# === 受伤无敌帧 ===
+# 受击后短暂无敌，防多帧连续扣血
+var _invincible_timer: float = 0.0
+const INVINCIBLE_DURATION: float = 0.5
+
+# === 死亡状态 ===
+var _is_dying: bool = false
+var _die_timer: float = 0.0
+const DIE_FADE_DURATION: float = 0.8
 
 # 攻击状态计时
 var _attack_timer: float = 0.0
@@ -25,6 +46,11 @@ var _hitbox_offset: float = 35.0
 
 
 func _ready() -> void:
+	# 从 characters.json 读初始 HP（数据驱动 §1.2）
+	_load_character_data()
+	# 记录初始位置作为安全点
+	_safe_position = global_position
+
 	# 创建攻击判定区域（Area2D）
 	# Area2D 是 Godot 的"区域检测器"，物体进入会发信号
 	_hitbox_area = Area2D.new()
@@ -42,7 +68,31 @@ func _ready() -> void:
 	_hitbox_area.monitoring = false
 
 
+# 从 data/characters.json 读角色初始属性
+func _load_character_data() -> void:
+	var data: Dictionary = DataManager.get_data("characters")
+	if data.is_empty():
+		push_warning("Player: characters.json 为空，用默认值")
+		return
+	var initial: Dictionary = data.get("initial", {})
+	max_hp = int(initial.get("HP", 100))
+	current_hp = max_hp
+
+
 func _physics_process(delta: float) -> void:
+	# === 死亡淡出阶段 ===
+	if _is_dying:
+		_die_timer += delta
+		var progress: float = _die_timer / DIE_FADE_DURATION
+		modulate.a = 1.0 - progress
+		if progress >= 1.0:
+			_respawn()
+		return
+
+	# === 无敌帧倒计时 ===
+	if _invincible_timer > 0:
+		_invincible_timer -= delta
+
 	# === 移动 ===
 	# get_vector 读多个动作名，一次返回标准化方向向量
 	var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", "move_down")
@@ -66,7 +116,9 @@ func _physics_process(delta: float) -> void:
 		if not _attack_hit:
 			_check_hit()
 	else:
-		modulate = Color(1, 1, 1, 1)
+		# 非攻击且非无敌时恢复原色
+		if _invincible_timer <= 0:
+			modulate = Color(1, 1, 1, 1)
 		_hitbox_area.monitoring = false
 		_attack_hit = false
 
@@ -139,6 +191,52 @@ func _spawn_damage_number(amount: int, position: Vector2) -> void:
 	t.chain().tween_callback(label.queue_free)
 
 
+# === 玩家受伤（Phase 4 新增）===
+# docs/02-战斗系统.md：无死亡惩罚，回安全点重生
 func take_damage(amount: int) -> void:
-	# Phase 5 实现玩家受伤逻辑
-	pass
+	# 死亡中或无敌帧内不扣血
+	if _is_dying:
+		return
+	if _invincible_timer > 0:
+		return
+
+	current_hp -= amount
+
+	# 受击闪白 0.1 秒（与 monster.gd 一致的打击感）
+	modulate = Color(3.0, 3.0, 3.0, 1.0)
+	var t: Tween = create_tween()
+	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
+
+	# 飘出伤害数字（红色，让玩家看到掉了多少血）
+	_spawn_damage_number(amount, global_position)
+
+	# 受击屏震
+	_shake_camera(4.0, 0.1)
+
+	# 启动无敌帧
+	_invincible_timer = INVINCIBLE_DURATION
+
+	# 血量归零 → 死亡
+	if current_hp <= 0:
+		current_hp = 0
+		_start_dying()
+
+
+# 开始死亡淡出
+func _start_dying() -> void:
+	_is_dying = true
+	_die_timer = 0.0
+	# 死亡时停止移动和攻击
+	velocity = Vector2.ZERO
+	_hitbox_area.monitoring = false
+
+
+# 重生：传送到安全点，恢复血量
+# docs/02-战斗系统.md：无死亡惩罚（不掉落、不扣经验、不扣金币）
+func _respawn() -> void:
+	_is_dying = false
+	_die_timer = 0.0
+	current_hp = max_hp
+	modulate.a = 1.0
+	modulate = Color(1, 1, 1, 1)
+	global_position = _safe_position
