@@ -21,24 +21,24 @@
       "tradeable": false
     },
     "pet_egg_01": {
-      "name": "宠物蛋（小白虎）",
+      "name": "宠物蛋（火腿狗）",
       "category": "important",
       "rarity": "green",
-      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "description": "一颗散发肉香的蛋，敲开会有火腿狗跳出来。",
       "tradeable": false
     },
     "pet_egg_02": {
-      "name": "宠物蛋（红尾狐）",
+      "name": "宠物蛋（铁拳）",
       "category": "important",
       "rarity": "green",
-      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "description": "一颗沉甸甸的蛋，敲击时有金属声。",
       "tradeable": false
     },
     "pet_egg_03": {
-      "name": "宠物蛋（青鳞龟）",
+      "name": "宠物蛋（银色种子）",
       "category": "important",
       "rarity": "green",
-      "description": "一颗带着微温的蛋，似乎即将破壳。",
+      "description": "一颗银光闪闪的蛋，表面有种子纹理。",
       "tradeable": false
     },
     "subprof_credential_fishing": {

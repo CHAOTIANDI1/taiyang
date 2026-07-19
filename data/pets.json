@@ -11,39 +11,43 @@
         "damage": 8,
         "skill_id": "<技能id>",
         "tame_material_id": "<驯服材料id>",
+        "initial_level": 1,
         "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
       }
     }
   },
   "_data": {
-    "pet_001_white_tiger": {
-      "name": "小白虎",
+    "pet_001_ham_dog": {
+      "name": "火腿狗",
       "base_pet_id": "pet_egg_01",
-      "species": "白虎",
+      "species": "火腿狗",
       "hp": 60,
       "damage": 10,
-      "skill_id": "pet_bite_001",
-      "tame_material_id": "material_meat_001",
+      "skill_id": "pet_skill_001_pending",
+      "tame_material_id": "material_meat_001_pending",
+      "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
     },
-    "pet_002_red_fox": {
-      "name": "红尾狐",
+    "pet_002_iron_fist": {
+      "name": "铁拳",
       "base_pet_id": "pet_egg_02",
-      "species": "红狐",
+      "species": "铁拳",
       "hp": 40,
       "damage": 14,
-      "skill_id": "pet_fire_breath_002",
-      "tame_material_id": "material_fish_001",
+      "skill_id": "pet_skill_002_pending",
+      "tame_material_id": "material_ore_001_pending",
+      "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"crit_pct": 1}
     },
-    "pet_003_green_turtle": {
-      "name": "青鳞龟",
+    "pet_003_silver_seed": {
+      "name": "银色种子",
       "base_pet_id": "pet_egg_03",
-      "species": "青龟",
+      "species": "银色种子",
       "hp": 100,
       "damage": 6,
-      "skill_id": "pet_shield_003",
-      "tame_material_id": "material_grass_001",
+      "skill_id": "pet_skill_003_pending",
+      "tame_material_id": "material_grass_001_pending",
+      "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"defense_pct": 3}
     }
   }
