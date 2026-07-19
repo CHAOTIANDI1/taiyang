@@ -12,7 +12,8 @@
         "skill_id": "<技能id>",
         "tame_material_id": "<驯服材料id>",
         "initial_level": 1,
-        "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
+        "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3},
+        "color": "#RRGGBB"
       }
     }
   },
@@ -26,7 +27,8 @@
       "skill_id": "pet_skill_001_pending",
       "tame_material_id": "material_meat_001_pending",
       "initial_level": 1,
-      "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3}
+      "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3},
+      "color": "#E64B4B"
     },
     "pet_002_iron_fist": {
       "name": "铁拳",
@@ -37,7 +39,8 @@
       "skill_id": "pet_skill_002_pending",
       "tame_material_id": "material_ore_001_pending",
       "initial_level": 1,
-      "breakthrough_bonus_per_10_lv": {"crit_pct": 1}
+      "breakthrough_bonus_per_10_lv": {"crit_pct": 1},
+      "color": "#7A7A85"
     },
     "pet_003_silver_seed": {
       "name": "银色种子",
@@ -48,7 +51,8 @@
       "skill_id": "pet_skill_003_pending",
       "tame_material_id": "material_grass_001_pending",
       "initial_level": 1,
-      "breakthrough_bonus_per_10_lv": {"defense_pct": 3}
+      "breakthrough_bonus_per_10_lv": {"defense_pct": 3},
+      "color": "#C8C8D8"
     }
   }
 }

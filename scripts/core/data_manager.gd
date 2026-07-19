@@ -47,6 +47,10 @@ func get_skill(id: String) -> Dictionary:
 	var d: Dictionary = _cache.get("skills", {}).get("_data", {})
 	return d.get(id, {})
 
+func get_pet(id: String) -> Dictionary:
+	var d: Dictionary = _cache.get("pets", {}).get("_data", {})
+	return d.get(id, {})
+
 func get_map(id: String) -> Dictionary:
 	var d: Dictionary = _cache.get("maps", {})
 	return d.get(id, {})

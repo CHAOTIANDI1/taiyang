@@ -1,10 +1,39 @@
 # 24 - Godot InputMap 与输入映射
 
+## 本游戏实例（v2.7 准则，v2.8 回填）
+
+- **遇到的问题**：Phase 4.4.2 宠物系统需要按 Z 键切换"温和模式"（宠物只跟随不战斗，无敌）。如果不走 InputMap，代码里要写死 `if event.keycode == 90:` 这种硬编码，玩家无法改键位。需要用 InputMap 注册一个动作名 `pet_toggle_mode`，代码里只写动作名，不写物理键编号。
+- **专业名词/知识点**：InputMap、动作名（Action Name）、物理键（Physical Key）、keycode（键码）、`project.godot` 的 `[input]` 段
+- **技术栈/代码/美术**：`project.godot` 第 82-86 行 `[input]` 段的 `pet_toggle_mode` 配置（keycode=90，即 Z 键）、`scripts/pet/pet.gd` 第 58 行 `Input.is_action_just_pressed("pet_toggle_mode")`
+- **应用过程**：
+  1. 在 `project.godot` 的 `[input]` 段加 `pet_toggle_mode` 配置，绑定 Z 键（keycode=90）
+  2. 在 `pet.gd` 的 `_physics_process` 里写 `if Input.is_action_just_pressed("pet_toggle_mode"): toggle_gentle_mode()`
+  3. 玩家按 Z 键 → Godot 查 InputMap 表 → 触发 `pet_toggle_mode` 动作 → pet.gd 收到信号 → 切换温和模式
+  4. 未来玩家想改键位（如改成 X 键），只需在 Godot 项目设置里改 `pet_toggle_mode` 的物理键，代码不动
+
+---
+
 ## 概念
 
 **InputMap** = Godot 里"按键名字 → 具体物理按键"的映射表。比如你定"move_up=W"——之后代码里写 `Input.is_action_pressed("move_up")`，Godot 自动查表，按 W 就触发。
 
 生活类比：遥控器上的"开机键"按下其实触发的是"打开电视"信号——你不用记信号编号，只要按"开机键"。
+
+**本游戏专属例子 1（生动形象）**：把 InputMap 想象成《太阳之下》的"键位翻译官"。你跟翻译官说"我要攻击"（动作名 `attack`），翻译官查表发现玩家按了 J 键，于是帮你把"攻击"信号发给 player.gd。player.gd 只知道"攻击"信号来了，不关心是 J 键还是手柄 A 键。
+
+**本游戏专属例子 2（本游戏应用）**：Phase 4.4.2 新增的 `pet_toggle_mode` 动作。在 `project.godot` 注册：
+```ini
+pet_toggle_mode={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,...,"keycode":90,...)]
+}
+```
+然后在 `pet.gd` 调用：
+```gdscript
+if Input.is_action_just_pressed("pet_toggle_mode"):
+    toggle_gentle_mode()
+```
+玩家按 Z（keycode=90）→ Godot 查表触发动作 → pet.gd 收到信号切换温和模式。改键位时只改 `project.godot`，代码完全不动。
 
 ## 功能
 
@@ -77,17 +106,18 @@ Godot 启动时读 `project.godot` 的 `[input]` 段，建一张"动作名→物
 
 ## 在我们项目用到的键映射
 
-| 动作名 | 键 | 用途 |
-|--------|----|------|
-| `move_left` | A | 向左移动 |
-| `move_right` | D | 向右移动 |
-| `move_up` | W | 向上移动 |
-| `move_down` | S | 向下移动 |
-| `attack` | J | 普通攻击（武器模组） |
-| `skill_1` | K | 技能 1（基础，短 CD） |
-| `skill_2` | L | 技能 2（核心，长 CD） |
-| `skill_3` | U | 技能 3（爆发，长 CD） |
-| `interact` | E | 与 NPC 对话/物品交互 |
+| 动作名 | 键 | 用途 | 加入版本 |
+|--------|----|------|---------|
+| `move_left` | A | 向左移动 | Phase 4.1 |
+| `move_right` | D | 向右移动 | Phase 4.1 |
+| `move_up` | W | 向上移动 | Phase 4.1 |
+| `move_down` | S | 向下移动 | Phase 4.1 |
+| `attack` | J | 普通攻击（武器模组） | Phase 4.1 |
+| `skill_1` | K | 技能 1（基础，短 CD） | Phase 4.1 |
+| `skill_2` | L | 技能 2（核心，长 CD） | Phase 4.1 |
+| `skill_3` | U | 技能 3（爆发，长 CD） | Phase 4.1 |
+| `interact` | E | 与 NPC 对话/物品交互 | Phase 4.1 |
+| `pet_toggle_mode` | Z | 切换宠物温和模式（默认开启，无敌只跟随） | Phase 4.4.2 |
 
 ## 例外条款说明
 
