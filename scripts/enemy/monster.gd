@@ -1,7 +1,7 @@
 extends CharacterBody2D
-## 怪物基类 - Phase 4.1（修复版）
-## 负责：从 monsters.json 读数据、受击扣血、死亡淡出、攻击玩家
-## 修复：加调试 print + 碰撞层分离适配
+## 怪物基类 - Phase 4.4.6（仇恨机制版）
+## 负责：从 monsters.json 读数据、受击扣血、死亡淡出、攻击玩家或战斗模式宠物
+## 4.4.6 新增：仇恨 5 秒转移 + 判定战斗模式宠物为目标
 
 signal died
 
@@ -23,6 +23,10 @@ var _is_telegraphing: bool = false
 var _target: Node = null
 var _is_dying: bool = false
 var _die_timer: float = 0.0
+
+# 4.4.6 仇恨机制
+var _aggro_timer: float = 0.0        # 仇恨计时器（> 0 时强制打玩家）
+const AGGRO_DURATION: float = 5.0    # 仇恨锁定时长（docs/03 设计：5 秒）
 
 const DIE_FADE_DURATION: float = 0.5
 
@@ -59,6 +63,12 @@ func _physics_process(delta: float) -> void:
 	if _attack_cd_timer > 0:
 		_attack_cd_timer -= delta
 
+	# 4.4.6 仇恨计时器倒计时
+	if _aggro_timer > 0:
+		_aggro_timer -= delta
+		if _aggro_timer <= 0 and _debug:
+			print("[Monster:%s] 仇恨过期，回到最近目标规则" % monster_id)
+
 	match ai_template:
 		"static":
 			pass
@@ -67,7 +77,24 @@ func _physics_process(delta: float) -> void:
 
 
 func _ai_melee_charger(delta: float) -> void:
+	# 4.4.6 动态选择目标：
+	# - 仇恨锁定（_aggro_timer > 0）→ 强制打玩家
+	# - 否则 → 选最近目标（玩家 or 战斗模式宠物）
+	if _aggro_timer <= 0:
+		var new_target: Node = _find_nearest_target()
+		if new_target != null and new_target != _target:
+			if _debug:
+				var target_name: String = "玩家" if new_target.name == "Player" else "宠物"
+				print("[Monster:%s] 切换目标 → %s（最近目标规则）" % [monster_id, target_name])
+			_target = new_target
+
 	if _target == null or not is_instance_valid(_target):
+		return
+
+	# 4.4.6 温和模式宠物不能被攻击，跳过
+	# 4.4.6 修复：用 has_method + is_gentle_mode() 方法替代 Object.get(prop, default)
+	if _target.name != "Player" and _target.has_method("is_gentle_mode") and _target.is_gentle_mode():
+		_target = null
 		return
 
 	var to_player: Vector2 = _target.global_position - global_position
@@ -90,11 +117,12 @@ func _ai_melee_charger(delta: float) -> void:
 		if distance <= attack_range and _attack_cd_timer <= 0:
 			# 进入攻击距离 + CD 好了 → 预警
 			if _debug:
-				print("[Monster:%s] 进入攻击距离(%.0f<=%.0f)，开始预警..." % [monster_id, distance, attack_range])
+				var target_name2: String = "玩家" if _target.name == "Player" else "宠物"
+				print("[Monster:%s] 进入攻击距离(%.0f<=%.0f) 目标=%s，开始预警..." % [monster_id, distance, attack_range, target_name2])
 			_is_telegraphing = true
 			_telegraph_timer = telegraph_duration
 		elif distance > attack_range:
-			# 不在攻击距离 → 走向玩家
+			# 不在攻击距离 → 走向目标
 			var direction: Vector2 = to_player.normalized()
 			velocity = direction * move_speed
 			move_and_slide()
@@ -104,29 +132,77 @@ func _ai_melee_charger(delta: float) -> void:
 			move_and_slide()
 
 
+func _find_nearest_target() -> Node:
+	# 4.4.6 找最近目标：玩家 or 战斗模式宠物（非温和模式）
+	# 返回最近的合法目标，没有则返回 null
+	var player: Node = get_parent().get_node_or_null("Player")
+	var best_target: Node = null
+	var best_dist: float = 999999.0
+
+	# 检查玩家
+	# 4.4.6 修复：Godot 4 的 Object.get() 只接受 1 个参数，去掉默认值参数
+	if player != null and is_instance_valid(player) and not bool(player.get("_is_dying")):
+		best_target = player
+		best_dist = global_position.distance_to(player.global_position)
+
+	# 检查所有战斗模式宠物（遍历场景中的 Pet 节点）
+	var pets: Array = get_parent().get_children()
+	for child in pets:
+		if child == self:
+			continue
+		# 判断是否是宠物节点（有 is_gentle_mode 方法）
+		if child.name != "Player" and child.has_method("take_damage") and child.has_method("is_gentle_mode"):
+			# 4.4.6 修复：直接调用 is_gentle_mode() 方法（前面 has_method 已确认存在）
+			# _is_dying 用 Object.get() 单参数版，属性不存在返回 null，bool(null) = false
+			if not child.is_gentle_mode() and not bool(child.get("_is_dying")):
+				var dist: float = global_position.distance_to(child.global_position)
+				if dist < best_dist:
+					best_dist = dist
+					best_target = child
+
+	return best_target
+
+
 func _do_attack() -> void:
 	if _target == null or not is_instance_valid(_target):
 		if _debug:
 			print("[Monster:%s] 攻击失败：目标无效" % monster_id)
 		return
-	if _target.has_method("take_damage"):
+	# 4.4.6 再次检查目标是否合法（温和模式宠物不能被攻击）
+	# 4.4.6 修复：用 has_method + is_gentle_mode() 方法替代 Object.get(prop, default)
+	# 原因：Godot 4 的 Object.get() 只接受 1 个参数；has_method 已确认是宠物，可直接调用方法
+	if _target.name != "Player" and _target.has_method("is_gentle_mode") and _target.is_gentle_mode():
 		if _debug:
-			print("[Monster:%s] 命中玩家！调用 take_damage(%d)" % [monster_id, damage])
+			print("[Monster:%s] 目标进入温和模式，攻击取消" % monster_id)
+		return
+	if _target.has_method("take_damage"):
+		var target_name: String = "玩家" if _target.name == "Player" else "宠物"
+		if _debug:
+			print("[Monster:%s] 命中%s！调用 take_damage(%d)" % [monster_id, target_name, damage])
 		_target.take_damage(damage)
 	else:
 		if _debug:
 			print("[Monster:%s] 目标没有 take_damage 方法" % monster_id)
 
 
-func take_damage(amount: int) -> void:
+func take_damage(amount: int, attacker: Node = null) -> void:
 	if _is_dying:
 		return
 	current_hp -= amount
 	if _debug:
-		print("[Monster:%s] 受击！扣 %d，剩余 %d/%d" % [monster_id, amount, current_hp, max_hp])
+		var attacker_name: String = "未知" if attacker == null else attacker.name
+		print("[Monster:%s] 受击！扣 %d（来自 %s），剩余 %d/%d" % [monster_id, amount, attacker_name, current_hp, max_hp])
 	modulate = Color(3.0, 3.0, 3.0, 1.0)
 	var t: Tween = create_tween()
 	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
+
+	# 4.4.6 仇恨机制：被玩家打时锁定玩家 5 秒（docs/03 设计）
+	if attacker != null and attacker.name == "Player":
+		_aggro_timer = AGGRO_DURATION
+		if _target != attacker:
+			_target = attacker
+			if _debug:
+				print("[Monster:%s] 仇恨转移！锁定玩家 5 秒" % monster_id)
 
 	if current_hp <= 0:
 		start_dying()

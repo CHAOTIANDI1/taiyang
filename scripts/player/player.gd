@@ -148,7 +148,8 @@ func _check_hit() -> void:
 		if body == self:
 			continue
 		if body.has_method("take_damage"):
-			body.take_damage(attack_damage)
+			# 4.4.6 传 self 作为 attacker，让怪物仇恨机制知道是玩家打的
+			body.take_damage(attack_damage, self)
 			_attack_hit = true
 			_spawn_damage_number(attack_damage, body.global_position)
 			_shake_camera(4.5, 0.12)

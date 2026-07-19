@@ -13,7 +13,10 @@
         "tame_material_id": "<驯服材料id>",
         "initial_level": 1,
         "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3},
-        "color": "#RRGGBB"
+        "color": "#RRGGBB",
+        "attack_range": 40,
+        "attack_cooldown": 1.5,
+        "attack_duration": 0.3
       }
     }
   },
@@ -28,7 +31,10 @@
       "tame_material_id": "material_meat_001_pending",
       "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"attack_speed_pct": 3},
-      "color": "#E64B4B"
+      "color": "#E64B4B",
+      "attack_range": 45,
+      "attack_cooldown": 1.2,
+      "attack_duration": 0.3
     },
     "pet_002_iron_fist": {
       "name": "铁拳",
@@ -40,7 +46,10 @@
       "tame_material_id": "material_ore_001_pending",
       "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"crit_pct": 1},
-      "color": "#7A7A85"
+      "color": "#7A7A85",
+      "attack_range": 40,
+      "attack_cooldown": 1.5,
+      "attack_duration": 0.3
     },
     "pet_003_silver_seed": {
       "name": "银色种子",
@@ -52,7 +61,10 @@
       "tame_material_id": "material_grass_001_pending",
       "initial_level": 1,
       "breakthrough_bonus_per_10_lv": {"defense_pct": 3},
-      "color": "#C8C8D8"
+      "color": "#C8C8D8",
+      "attack_range": 50,
+      "attack_cooldown": 1.8,
+      "attack_duration": 0.3
     }
   }
 }
