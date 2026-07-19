@@ -16,6 +16,18 @@ var attack_range: float = 40.0
 var attack_cooldown: float = 1.5
 var telegraph_duration: float = 0.5
 
+# 步骤 2：攻击模式字段（从 monsters.json 读，数据驱动）
+# attack_pattern: guaranteed_hit（必中，Boss 用）/ telegraph_then_check（前摇后范围检查，红尾蝎用）
+# attack_shape: cone（扇形）/ circle（圆形）/ rectangle（矩形）/ rect_dir（朝向矩形）/ cross（双十字）
+# attack_radius: 攻击半径（像素）—— 32×√2×1.5 ≈ 68
+# attack_arc_degree: 扇形弧度（度）—— 45 度
+# hit_count: 命中数量 —— 1=单体最近 / -1=群体
+var _attack_pattern: String = "telegraph_then_check"
+var _attack_shape: String = "cone"
+var _attack_radius: float = 68.0
+var _attack_arc_degree: float = 45.0
+var _hit_count: int = 1
+
 # === 内部状态 ===
 var _attack_cd_timer: float = 0.0
 var _telegraph_timer: float = 0.0
@@ -175,11 +187,45 @@ func _do_attack() -> void:
 		if _debug:
 			print("[Monster:%s] 目标进入温和模式，攻击取消" % monster_id)
 		return
+
+	# 步骤 2：attack_pattern 分支
+	# - guaranteed_hit：必中（Boss 用，保留原行为）
+	# - telegraph_then_check：预警结束后用 DamageArea 精确判定目标是否在攻击形状内
+	#   在 → 命中；不在 → 显示 miss 飘字（玩家跑开就 miss）
+	match _attack_pattern:
+		"guaranteed_hit":
+			_apply_damage_to_target()
+		"telegraph_then_check":
+			# 步骤 3：用 DamageArea 精确判定（cone 扇形 + 朝向目标）
+			var shape_config: Dictionary = {
+				"type": _attack_shape,
+				"radius": _attack_radius,
+				"arc_degree": _attack_arc_degree,
+				"hit_count": _hit_count
+			}
+			var facing: Vector2 = (_target.global_position - global_position).normalized()
+			var hits: Array = DamageArea.filter_targets(global_position, facing, shape_config, [_target])
+			if hits.size() > 0:
+				_apply_damage_to_target()
+			else:
+				if _debug:
+					var dist: float = global_position.distance_to(_target.global_position)
+					print("[Monster:%s] 攻击落空！目标距离 %.1f 不在 %s 内" % [monster_id, dist, DamageArea.describe_shape(shape_config)])
+				# 步骤 1 飘字系统：miss 用灰色字
+				DamageNumberManager.show_damage_number(_target.global_position, 0, "miss")
+		_:
+			_apply_damage_to_target()
+
+
+func _apply_damage_to_target() -> void:
+	# 步骤 2：抽出"实际命中并扣血"逻辑，供 _do_attack 各分支复用
 	if _target.has_method("take_damage"):
 		var target_name: String = "玩家" if _target.name == "Player" else "宠物"
 		if _debug:
 			print("[Monster:%s] 命中%s！调用 take_damage(%d)" % [monster_id, target_name, damage])
 		_target.take_damage(damage)
+		# 步骤 1：怪物命中目标时显示伤害飘字
+		DamageNumberManager.show_damage_number(_target.global_position, damage, "damage")
 	else:
 		if _debug:
 			print("[Monster:%s] 目标没有 take_damage 方法" % monster_id)
@@ -192,6 +238,8 @@ func take_damage(amount: int, attacker: Node = null) -> void:
 	if _debug:
 		var attacker_name: String = "未知" if attacker == null else attacker.name
 		print("[Monster:%s] 受击！扣 %d（来自 %s），剩余 %d/%d" % [monster_id, amount, attacker_name, current_hp, max_hp])
+	# 步骤 1：怪物受伤时显示伤害飘字
+	DamageNumberManager.show_damage_number(global_position, amount, "damage")
 	modulate = Color(3.0, 3.0, 3.0, 1.0)
 	var t: Tween = create_tween()
 	t.tween_property(self, "modulate", Color(1, 1, 1, 1), 0.1)
@@ -228,6 +276,12 @@ func _load_data_from_json() -> void:
 	attack_range = float(data.get("attack_range", 40.0))
 	attack_cooldown = float(data.get("attack_cooldown", 1.5))
 	telegraph_duration = float(data.get("telegraph_duration", 0.5))
+	# 步骤 2：攻击模式字段（数据驱动）
+	_attack_pattern = String(data.get("attack_pattern", "telegraph_then_check"))
+	_attack_shape = String(data.get("attack_shape", "cone"))
+	_attack_radius = float(data.get("attack_radius", 68.0))
+	_attack_arc_degree = float(data.get("attack_arc_degree", 45.0))
+	_hit_count = int(data.get("hit_count", 1))
 	current_hp = max_hp
 
 

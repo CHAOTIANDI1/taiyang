@@ -16,7 +16,12 @@
         "color": "#RRGGBB",
         "attack_range": 40,
         "attack_cooldown": 1.5,
-        "attack_duration": 0.3
+        "attack_duration": 0.3,
+        "attack_pattern": "instant_check",
+        "attack_shape": "cone",
+        "attack_radius": 68,
+        "attack_arc_degree": 45,
+        "hit_count": 1
       }
     }
   },
@@ -34,7 +39,12 @@
       "color": "#E64B4B",
       "attack_range": 45,
       "attack_cooldown": 1.2,
-      "attack_duration": 0.3
+      "attack_duration": 0.3,
+      "attack_pattern": "instant_check",
+      "attack_shape": "cone",
+      "attack_radius": 68,
+      "attack_arc_degree": 45,
+      "hit_count": 1
     },
     "pet_002_iron_fist": {
       "name": "铁拳",
@@ -49,7 +59,12 @@
       "color": "#7A7A85",
       "attack_range": 40,
       "attack_cooldown": 1.5,
-      "attack_duration": 0.3
+      "attack_duration": 0.3,
+      "attack_pattern": "instant_check",
+      "attack_shape": "cone",
+      "attack_radius": 68,
+      "attack_arc_degree": 45,
+      "hit_count": 1
     },
     "pet_003_silver_seed": {
       "name": "银色种子",
@@ -64,7 +79,12 @@
       "color": "#C8C8D8",
       "attack_range": 50,
       "attack_cooldown": 1.8,
-      "attack_duration": 0.3
+      "attack_duration": 0.3,
+      "attack_pattern": "instant_check",
+      "attack_shape": "cone",
+      "attack_radius": 68,
+      "attack_arc_degree": 45,
+      "hit_count": 1
     }
   }
 }

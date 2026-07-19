@@ -41,6 +41,15 @@ var _hitbox_width: float = 50.0
 var _hitbox_height: float = 50.0
 var _hitbox_offset: float = 35.0
 
+# 步骤 3：玩家攻击形状配置（暂时硬编码常量，未来数据驱动到 characters.json）
+# 数值推导：32×√2×1.5 ≈ 68 像素（详见 docs/02-战斗系统.md 攻击判定模式段）
+const ATTACK_SHAPE_CONFIG: Dictionary = {
+	"type": "cone",
+	"radius": 68.0,
+	"arc_degree": 45.0,
+	"hit_count": 1
+}
+
 
 func _ready() -> void:
 	_load_character_data()
@@ -139,20 +148,31 @@ func _update_hitbox_position() -> void:
 
 
 # 修复 2：检测命中时排除自己
+# 步骤 3：用 DamageArea 工具类按扇形精筛（半径 68 + 45 度）
 func _check_hit() -> void:
 	var bodies: Array = _hitbox_area.get_overlapping_bodies()
+	# 粗筛：排除玩家自己 + 排除死亡目标 + 必须有 take_damage
+	var candidates: Array = []
 	for body in bodies:
 		# === 关键修复：排除玩家自己 ===
 		# Phase 4 新增 take_damage 后，hitbox 会检测到自己
 		# 必须跳过自己，否则按 J 就自己打自己
 		if body == self:
 			continue
-		if body.has_method("take_damage"):
-			# 4.4.6 传 self 作为 attacker，让怪物仇恨机制知道是玩家打的
-			body.take_damage(attack_damage, self)
-			_attack_hit = true
-			_spawn_damage_number(attack_damage, body.global_position)
-			_shake_camera(4.5, 0.12)
+		if body.has_method("take_damage") and not bool(body.get("_is_dying")):
+			candidates.append(body)
+	# 精筛：用 DamageArea 按扇形判定
+	var hits: Array = DamageArea.filter_targets(global_position, _facing, ATTACK_SHAPE_CONFIG, candidates)
+	for body in hits:
+		if body == null or not is_instance_valid(body):
+			continue
+		# 4.4.6 传 self 作为 attacker，让怪物仇恨机制知道是玩家打的
+		body.take_damage(attack_damage, self)
+		_attack_hit = true
+		_spawn_damage_number(attack_damage, body.global_position)
+		_shake_camera(4.5, 0.12)
+		# hit_count=1 时只打 1 个
+		if int(ATTACK_SHAPE_CONFIG.get("hit_count", 1)) == 1:
 			break
 
 
@@ -167,16 +187,8 @@ func _shake_camera(intensity: float, duration: float) -> void:
 
 
 func _spawn_damage_number(amount: int, pos: Vector2) -> void:
-	var label: Label = Label.new()
-	label.text = str(amount)
-	label.position = pos + Vector2(0, -20)
-	label.modulate = Color(1, 0.5, 0.5, 1)
-	get_parent().add_child(label)
-
-	var t: Tween = create_tween()
-	t.parallel().tween_property(label, "position:y", label.position.y - 40, 0.6)
-	t.parallel().tween_property(label, "modulate:a", 0.0, 0.6)
-	t.chain().tween_callback(label.queue_free)
+	# 步骤 1：改为调用全局 DamageNumberManager（统一伤害飘字入口）
+	DamageNumberManager.show_damage_number(pos, amount, "damage")
 
 
 # === 玩家受伤 ===

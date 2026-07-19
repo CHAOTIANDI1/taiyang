@@ -47,6 +47,15 @@ var _attack_target: Node = null       # 当前攻击目标（怪物节点）
 var _attack_area: Area2D = null       # 攻击判定区域（侦测+命中共用）
 var _attack_shape: CollisionShape2D = null
 
+# 步骤 2：攻击模式字段（从 pets.json 读，与 monsters.json 一致）
+# instant_check：宠物攻击模式（攻击动画期间用 AttackArea 检测，没有预警）
+# 步骤 3 会用 DamageArea + attack_shape 做精确判定
+var _attack_pattern: String = "instant_check"
+var _attack_shape_name: String = "cone"
+var _attack_radius: float = 68.0
+var _attack_arc_degree: float = 45.0
+var _hit_count: int = 1
+
 
 func _ready() -> void:
 	_color_rect = get_node_or_null("ColorRect")
@@ -276,18 +285,42 @@ func _start_pet_attack() -> void:
 
 
 func _check_pet_hit() -> void:
-	# 4.4.6 检测攻击命中（用 AttackArea 检测，命中 _attack_target）
+	# 步骤 3：用 DamageArea 工具类筛选命中目标（扇形 + 单体最近）
+	# _attack_area 提供粗筛候选（mask=4 怪物层），DamageArea 按形状精筛
 	if _attack_area == null or _attack_target == null:
 		return
 	var bodies: Array = _attack_area.get_overlapping_bodies()
+	# 粗筛：排除自己 + 排除死亡目标 + 必须有 take_damage
+	var candidates: Array = []
 	for body in bodies:
-		if body == _attack_target and body.has_method("take_damage"):
-			# 传 self 作为 attacker（宠物打不触发仇恨，但保持接口一致）
-			body.take_damage(damage, self)
-			_attack_hit = true
-			# 4.4.6 修复：Object.get() 单参数版，用 in 操作符检查属性
-			var monster_id_str: String = String(body.monster_id) if "monster_id" in body else ""
-			print("[Pet:%s] 命中 %s！造成 %d 伤害" % [pet_id, monster_id_str, damage])
+		if body == self:
+			continue
+		if body.has_method("take_damage") and not bool(body.get("_is_dying")):
+			candidates.append(body)
+	# 构造 shape_config（数据驱动，从 pets.json 读的字段）
+	var shape_config: Dictionary = {
+		"type": _attack_shape_name,
+		"radius": _attack_radius,
+		"arc_degree": _attack_arc_degree,
+		"hit_count": _hit_count
+	}
+	# 朝向：朝当前攻击目标
+	var facing: Vector2 = (_attack_target.global_position - global_position).normalized()
+	# 精筛
+	var hits: Array = DamageArea.filter_targets(global_position, facing, shape_config, candidates)
+	for body in hits:
+		if body == null or not is_instance_valid(body):
+			continue
+		# 传 self 作为 attacker（宠物打不触发仇恨，但保持接口一致）
+		body.take_damage(damage, self)
+		_attack_hit = true
+		# 步骤 1：宠物命中怪物时显示伤害飘字
+		DamageNumberManager.show_damage_number(body.global_position, damage, "damage")
+		# 4.4.6 修复：Object.get() 单参数版，用 in 操作符检查属性
+		var monster_id_str: String = String(body.monster_id) if "monster_id" in body else ""
+		print("[Pet:%s] 命中 %s！造成 %d 伤害（形状=%s）" % [pet_id, monster_id_str, damage, DamageArea.describe_shape(shape_config)])
+		# hit_count=1 时只打 1 个，hit_count=-1 时打全部
+		if _hit_count == 1:
 			break
 
 
@@ -305,6 +338,8 @@ func take_damage(amount: int) -> void:
 		return
 	current_hp -= amount
 	print("[Pet:%s] 受击！扣 %d，剩余 %d/%d" % [pet_id, amount, current_hp, max_hp])
+	# 步骤 1：宠物受伤时显示伤害飘字
+	DamageNumberManager.show_damage_number(global_position, amount, "damage")
 	if current_hp <= 0:
 		current_hp = 0
 		_start_dying()
@@ -344,6 +379,12 @@ func _load_data_from_json() -> void:
 	_attack_range = float(data.get("attack_range", 45.0))
 	_attack_cooldown = float(data.get("attack_cooldown", 1.2))
 	_attack_duration = float(data.get("attack_duration", 0.3))
+	# 步骤 2：攻击模式字段（与 monsters.json 一致，步骤 3 DamageArea 用）
+	_attack_pattern = String(data.get("attack_pattern", "instant_check"))
+	_attack_shape_name = String(data.get("attack_shape", "cone"))
+	_attack_radius = float(data.get("attack_radius", 68.0))
+	_attack_arc_degree = float(data.get("attack_arc_degree", 45.0))
+	_hit_count = int(data.get("hit_count", 1))
 	current_hp = max_hp
 
 

@@ -24,6 +24,7 @@ GameTime="*res://scripts/core/game_time.gd"
 MailManager="*res://scripts/core/mail_manager.gd"
 IntroSequence="*res://scripts/core/intro_sequence.gd"
 AudioManager="*res://scripts/core/audio_manager.gd"
+DamageNumberManager="*res://scripts/ui/damage_number_manager.gd"
 
 [display]
 

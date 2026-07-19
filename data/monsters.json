@@ -9,7 +9,12 @@
         "damage": 12,
         "speed": 80,
         "ai_template": "melee_charger",
-        "drops": [{"item_id": "<id>", "chance": 0.3}]
+        "drops": [{"item_id": "<id>", "chance": 0.3}],
+        "attack_pattern": "telegraph_then_check",
+        "attack_shape": "cone",
+        "attack_radius": 68,
+        "attack_arc_degree": 45,
+        "hit_count": 1
       }
     }
   },
@@ -33,6 +38,11 @@
       "attack_range": 40,
       "attack_cooldown": 1.5,
       "telegraph_duration": 0.5,
+      "attack_pattern": "telegraph_then_check",
+      "attack_shape": "cone",
+      "attack_radius": 68,
+      "attack_arc_degree": 45,
+      "hit_count": 1,
       "drops": [{"item_id": "material_leather_001", "chance": 0.4}],
       "color": [0.8, 0.3, 0.2],
       "size": 32
