@@ -151,7 +151,7 @@ func _check_hit() -> void:
 			body.take_damage(attack_damage)
 			_attack_hit = true
 			_spawn_damage_number(attack_damage, body.global_position)
-			_shake_camera(3.0, 0.08)
+			_shake_camera(4.5, 0.12)
 			break
 
 
