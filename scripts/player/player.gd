@@ -35,11 +35,13 @@ var _attack_hit: bool = false         # 本次攻击是否已命中
 var _facing: Vector2 = Vector2(1, 0)
 
 # 攻击判定区
+# v2.9 夯实地基：hitbox 范围从 50×50 扩大到 136×136（扇形半径×2）
+# 原因：原 50×50 矩形对角线≈35 < 扇形半径 68，会漏判扇形边缘目标
+# 现在矩形覆盖范围 ≥ 扇形精筛范围，确保粗筛不漏判
 var _hitbox_area: Area2D
-var _hitbox_shape: CollisionShape2D
-var _hitbox_width: float = 50.0
-var _hitbox_height: float = 50.0
-var _hitbox_offset: float = 35.0
+const HITBOX_SIZE: float = 136.0  # 矩形边长 = 扇形半径×2 = 68×2
+# v2.9 夯实地基：mask 数据驱动（从 characters.json 读 attack_target_mask）
+var _attack_target_mask: int = 4  # 默认怪物层(4)，联机版加 PvP 改 JSON
 
 # 步骤 3：玩家攻击形状配置（暂时硬编码常量，未来数据驱动到 characters.json）
 # 数值推导：32×√2×1.5 ≈ 68 像素（详见 docs/02-战斗系统.md 攻击判定模式段）
@@ -55,28 +57,18 @@ func _ready() -> void:
 	_load_character_data()
 	_safe_position = global_position
 
-	# 创建攻击判定区域
-	_hitbox_area = Area2D.new()
-	_hitbox_area.name = "AttackHitbox"
+	# v2.9 夯实地基：用 AttackAreaFactory 创建 hitbox（统一三处调用方逻辑）
+	# 解决不夯实点 D（重复代码）+ C（mask 数据驱动）
+	# hitbox 中心在玩家位置（不偏移），范围 136×136 覆盖扇形精筛范围
+	_hitbox_area = AttackAreaFactory.create(
+		"AttackHitbox",                    # 节点名
+		_attack_target_mask,               # mask 数据驱动（默认 4=怪物层）
+		Vector2(HITBOX_SIZE, HITBOX_SIZE), # 矩形边长 136×136
+		Vector2.ZERO                       # 以玩家为中心，不偏移（v2.9 修正：原来偏移 35 像素会导致朝身后攻击漏判）
+	)
 	add_child(_hitbox_area)
-
-	_hitbox_shape = CollisionShape2D.new()
-	var rect: RectangleShape2D = RectangleShape2D.new()
-	rect.size = Vector2(_hitbox_width, _hitbox_height)
-	_hitbox_shape.shape = rect
-	_hitbox_area.add_child(_hitbox_shape)
-
-	# 默认关闭
+	# hitbox 平时关闭，按 J 攻击时开启（_physics_process 里控制）
 	_hitbox_area.monitoring = false
-
-	# === 修复 1：设置碰撞层 ===
-	# 玩家自己在 layer 2，hitbox 的 mask 设为 layer 4（怪物专用检测层）
-	# 这样 hitbox 只检测怪物，不检测玩家自己
-	# layer 是"自己在哪层"，mask 是"自己检测哪层"
-	# 玩家 collision_layer=2（在 world.tscn 设置）
-	# 怪物 collision_layer=4（在 world.tscn 设置）
-	# hitbox Area2D：mask=4（只检测 layer 4 的怪物）
-	_hitbox_area.collision_mask = 4  # 只检测怪物层
 
 
 # 从 data/characters.json 读角色初始属性
@@ -88,6 +80,8 @@ func _load_character_data() -> void:
 	var initial: Dictionary = data.get("initial", {})
 	max_hp = int(initial.get("HP", 100))
 	current_hp = max_hp
+	# v2.9 夯实地基：mask 数据驱动（默认 4=怪物层，联机版加 PvP 改 JSON）
+	_attack_target_mask = int(initial.get("attack_target_mask", 4))
 
 
 func _physics_process(delta: float) -> void:
@@ -122,7 +116,8 @@ func _physics_process(delta: float) -> void:
 		# 攻击中闪白
 		modulate = Color(3.0, 3.0, 3.0, 1.0)
 		_hitbox_area.monitoring = true
-		_update_hitbox_position()
+		# v2.9 夯实地基：hitbox 以玩家为中心不偏移，朝向由 _facing 控制（DamageArea 用）
+		# 不再需要 _update_hitbox_position()，朝向在 _check_hit() 里通过 _facing 传给 DamageArea
 		if not _attack_hit:
 			_check_hit()
 	else:
@@ -143,12 +138,9 @@ func _start_attack() -> void:
 	_shake_camera(2.0, 0.1)
 
 
-func _update_hitbox_position() -> void:
-	_hitbox_area.position = _facing * _hitbox_offset
-
-
 # 修复 2：检测命中时排除自己
 # 步骤 3：用 DamageArea 工具类按扇形精筛（半径 68 + 45 度）
+# v2.9 夯实地基：hitbox 以玩家为中心 136×136，扇形朝向由 _facing 控制
 func _check_hit() -> void:
 	var bodies: Array = _hitbox_area.get_overlapping_bodies()
 	# 粗筛：排除玩家自己 + 排除死亡目标 + 必须有 take_damage

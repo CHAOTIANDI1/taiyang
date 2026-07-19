@@ -45,16 +45,17 @@ var _attack_cd_timer: float = 0.0     # 攻击 CD 计时
 var _attack_hit: bool = false         # 本次攻击是否已命中
 var _attack_target: Node = null       # 当前攻击目标（怪物节点）
 var _attack_area: Area2D = null       # 攻击判定区域（侦测+命中共用）
-var _attack_shape: CollisionShape2D = null
 
 # 步骤 2：攻击模式字段（从 pets.json 读，与 monsters.json 一致）
 # instant_check：宠物攻击模式（攻击动画期间用 AttackArea 检测，没有预警）
 # 步骤 3 会用 DamageArea + attack_shape 做精确判定
+# v2.9 夯实地基：attack_target_mask 数据驱动（默认 4=怪物层，联机版加 PvP 改 JSON）
 var _attack_pattern: String = "instant_check"
 var _attack_shape_name: String = "cone"
 var _attack_radius: float = 68.0
 var _attack_arc_degree: float = 45.0
 var _hit_count: int = 1
+var _attack_target_mask: int = 4  # 默认怪物层(4)
 
 
 func _ready() -> void:
@@ -74,20 +75,18 @@ func _ready() -> void:
 
 
 func _create_attack_area() -> void:
-	# 4.4.6 创建 AttackArea：以宠物为中心，半径=attack_range*1.5 的矩形
+	# v2.9 夯实地基：用 AttackAreaFactory 创建 AttackArea（统一三处调用方逻辑）
+	# 解决不夯实点 D（重复代码）+ C（mask 数据驱动）
 	# 用于：1) 侦测附近怪物（_find_nearest_monster）2) 攻击命中判定（_check_pet_hit）
-	_attack_area = Area2D.new()
-	_attack_area.name = "AttackArea"
+	# 侦测范围 = 攻击范围 × 1.5 × 2（左右各 1.5 倍攻击距离，留追击缓冲）
+	var detect_size: float = _attack_range * 1.5 * 2.0
+	_attack_area = AttackAreaFactory.create(
+		"AttackArea",                         # 节点名
+		_attack_target_mask,                  # mask 数据驱动（默认 4=怪物层）
+		Vector2(detect_size, detect_size),    # 矩形边长
+		Vector2.ZERO                          # 以宠物为中心，不偏移
+	)
 	add_child(_attack_area)
-	_attack_shape = CollisionShape2D.new()
-	var rect: RectangleShape2D = RectangleShape2D.new()
-	# size 是边长，以宠物为中心，所以 size = (range*2, range*2) 表示左右各 range 像素
-	var detect_size: float = _attack_range * 1.5 * 2.0  # 侦测范围 = 攻击范围 * 1.5（留追击缓冲）
-	rect.size = Vector2(detect_size, detect_size)
-	_attack_shape.shape = rect
-	_attack_area.add_child(_attack_shape)
-	# mask=4 只检测怪物层（Layer 4），不检测玩家/道具/宠物
-	_attack_area.collision_mask = 4
 	# monitoring 一直开着，用于侦测附近怪物
 	_attack_area.monitoring = true
 
@@ -385,6 +384,8 @@ func _load_data_from_json() -> void:
 	_attack_radius = float(data.get("attack_radius", 68.0))
 	_attack_arc_degree = float(data.get("attack_arc_degree", 45.0))
 	_hit_count = int(data.get("hit_count", 1))
+	# v2.9 夯实地基：mask 数据驱动（默认 4=怪物层，联机版加 PvP 改 JSON）
+	_attack_target_mask = int(data.get("attack_target_mask", 4))
 	current_hp = max_hp
 
 

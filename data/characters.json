@@ -17,6 +17,7 @@
     "DEF": 5,
     "MDEF": 5,
     "attribute_points_per_level": 3,
-    "mp_regen_per_second": 2
+    "mp_regen_per_second": 2,
+    "attack_target_mask": 4
   }
 }

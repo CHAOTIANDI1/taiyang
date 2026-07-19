@@ -22,11 +22,22 @@ var telegraph_duration: float = 0.5
 # attack_radius: 攻击半径（像素）—— 32×√2×1.5 ≈ 68
 # attack_arc_degree: 扇形弧度（度）—— 45 度
 # hit_count: 命中数量 —— 1=单体最近 / -1=群体
+# attack_target_mask: 碰撞层 mask（数据驱动，v2.9 夯实地基用）
+#   - 玩家层=2 / 怪物层=4 / 宠物层=16
+#   - 怪物默认 mask=18（2|16，攻击玩家+战斗模式宠物）
+#   - 联机版加 PvP 时改 JSON 即可，不改代码
 var _attack_pattern: String = "telegraph_then_check"
 var _attack_shape: String = "cone"
 var _attack_radius: float = 68.0
 var _attack_arc_degree: float = 45.0
 var _hit_count: int = 1
+var _attack_target_mask: int = 18  # 默认玩家(2)|宠物(16)
+
+# v2.9 夯实地基：怪物 AttackArea（类似玩家 hitbox + 宠物 AttackArea）
+# 用于 telegraph_then_check 区域性选择单体：攻击预警时开启 monitoring，
+# 预警结束时 get_overlapping_bodies() 拿所有候选 → DamageArea 精筛 → hit_count 选数量
+var _attack_area: Area2D = null
+const ATTACK_AREA_SIZE: float = 136.0  # 矩形边长 = 扇形半径×2 = 68×2，确保粗筛覆盖精筛
 
 # === 内部状态 ===
 var _attack_cd_timer: float = 0.0
@@ -51,6 +62,8 @@ var _debug: bool = true
 func _ready() -> void:
 	if monster_id != "":
 		_load_data_from_json()
+	# v2.9 夯实地基：用 AttackAreaFactory 创建攻击判定区域（mask 数据驱动）
+	_create_attack_area()
 	# 找玩家节点
 	await get_tree().process_frame
 	var p: Node = get_parent().get_node_or_null("Player")
@@ -60,6 +73,20 @@ func _ready() -> void:
 			print("[Monster:%s] 找到玩家目标！AI=%s HP=%d DMG=%d 速度=%f 攻击距离=%f" % [monster_id, ai_template, max_hp, damage, move_speed, attack_range])
 	else:
 		print("[Monster:%s] 警告：没找到 Player 节点！" % monster_id)
+
+
+func _create_attack_area() -> void:
+	# v2.9 夯实地基：用工厂函数统一创建 Area2D + CollisionShape2D + RectangleShape2D
+	# 解决不夯实点 D（重复代码）+ C（mask 数据驱动）
+	_attack_area = AttackAreaFactory.create(
+		"AttackArea",                       # 节点名
+		_attack_target_mask,                # mask 数据驱动（默认 18=玩家|宠物）
+		Vector2(ATTACK_AREA_SIZE, ATTACK_AREA_SIZE),  # 矩形边长 136×136
+		Vector2.ZERO                        # 以怪物为中心，不偏移
+	)
+	add_child(_attack_area)
+	# 怪物 AttackArea 平时关闭，攻击预警时开启（避免一直触发碰撞检测）
+	_attack_area.monitoring = false
 
 
 func _physics_process(delta: float) -> void:
@@ -123,6 +150,9 @@ func _ai_melee_charger(delta: float) -> void:
 			_is_telegraphing = false
 			_attack_cd_timer = attack_cooldown
 			modulate = Color(1, 1, 1, 1)
+			# v2.9 夯实地基：预警结束后关闭 AttackArea monitoring
+			if _attack_area != null:
+				_attack_area.monitoring = false
 	else:
 		modulate = Color(1, 1, 1, 1)
 
@@ -133,6 +163,9 @@ func _ai_melee_charger(delta: float) -> void:
 				print("[Monster:%s] 进入攻击距离(%.0f<=%.0f) 目标=%s，开始预警..." % [monster_id, distance, attack_range, target_name2])
 			_is_telegraphing = true
 			_telegraph_timer = telegraph_duration
+			# v2.9 夯实地基：预警开始时开启 AttackArea monitoring（粗筛所有目标）
+			if _attack_area != null:
+				_attack_area.monitoring = true
 		elif distance > attack_range:
 			# 不在攻击距离 → 走向目标
 			var direction: Vector2 = to_player.normalized()
@@ -191,12 +224,27 @@ func _do_attack() -> void:
 	# 步骤 2：attack_pattern 分支
 	# - guaranteed_hit：必中（Boss 用，保留原行为）
 	# - telegraph_then_check：预警结束后用 DamageArea 精确判定目标是否在攻击形状内
-	#   在 → 命中；不在 → 显示 miss 飘字（玩家跑开就 miss）
+	#   v2.9 夯实地基：从 AttackArea 拿所有重叠目标作为候选（区域性选择单体）
+	#   - 玩家跑开但战斗模式宠物在扇形内 → 自动命中宠物（符合 hit_count=1 设计真值）
+	#   - 玩家+宠物都不在扇形内 → 显示 miss 飘字
 	match _attack_pattern:
 		"guaranteed_hit":
 			_apply_damage_to_target()
 		"telegraph_then_check":
-			# 步骤 3：用 DamageArea 精确判定（cone 扇形 + 朝向目标）
+			# v2.9 夯实地基：从 AttackArea 粗筛所有重叠目标（区域性候选）
+			var candidates: Array = []
+			if _attack_area != null:
+				var bodies: Array = _attack_area.get_overlapping_bodies()
+				for body in bodies:
+					if body == self:
+						continue
+					# 必须有 take_damage 方法 + 没在死亡淡出中
+					if body.has_method("take_damage") and not bool(body.get("_is_dying")):
+						# 温和模式宠物不能被攻击（与 _find_nearest_target 规则一致）
+						if body.name != "Player" and body.has_method("is_gentle_mode") and body.is_gentle_mode():
+							continue
+						candidates.append(body)
+			# 步骤 3：用 DamageArea 精确判定（cone 扇形 + 朝向当前 _target）
 			var shape_config: Dictionary = {
 				"type": _attack_shape,
 				"radius": _attack_radius,
@@ -204,9 +252,11 @@ func _do_attack() -> void:
 				"hit_count": _hit_count
 			}
 			var facing: Vector2 = (_target.global_position - global_position).normalized()
-			var hits: Array = DamageArea.filter_targets(global_position, facing, shape_config, [_target])
+			var hits: Array = DamageArea.filter_targets(global_position, facing, shape_config, candidates)
 			if hits.size() > 0:
-				_apply_damage_to_target()
+				# 命中扇形内最近的目标（hit_count=1 时 DamageArea 已自动选最近）
+				# 注意：命中的目标可能是 _target 之外的另一个目标（如玩家跑开但宠物在扇形内）
+				_apply_damage_to_specific_target(hits[0])
 			else:
 				if _debug:
 					var dist: float = global_position.distance_to(_target.global_position)
@@ -219,13 +269,24 @@ func _do_attack() -> void:
 
 func _apply_damage_to_target() -> void:
 	# 步骤 2：抽出"实际命中并扣血"逻辑，供 _do_attack 各分支复用
-	if _target.has_method("take_damage"):
-		var target_name: String = "玩家" if _target.name == "Player" else "宠物"
+	# 默认打 _target（guaranteed_hit / 默认分支用）
+	_apply_damage_to_specific_target(_target)
+
+
+func _apply_damage_to_specific_target(target: Node) -> void:
+	# v2.9 夯实地基：支持区域性选择单体——命中的目标可能是 _target 之外的另一个目标
+	# telegraph_then_check 分支用 DamageArea.filter_targets 选最近的，传给本函数
+	if target == null or not is_instance_valid(target):
+		return
+	if target.has_method("take_damage"):
+		var target_name: String = "玩家" if target.name == "Player" else "宠物"
 		if _debug:
 			print("[Monster:%s] 命中%s！调用 take_damage(%d)" % [monster_id, target_name, damage])
-		_target.take_damage(damage)
+		# 4.4.6 传 self 作为 attacker，让玩家被攻击时不会触发仇恨（仇恨只在玩家主动攻击怪物时触发）
+		# 怪物攻击不需要传 attacker，因为 take_damage(amount, attacker) 默认 attacker=null
+		target.take_damage(damage)
 		# 步骤 1：怪物命中目标时显示伤害飘字
-		DamageNumberManager.show_damage_number(_target.global_position, damage, "damage")
+		DamageNumberManager.show_damage_number(target.global_position, damage, "damage")
 	else:
 		if _debug:
 			print("[Monster:%s] 目标没有 take_damage 方法" % monster_id)
@@ -282,6 +343,8 @@ func _load_data_from_json() -> void:
 	_attack_radius = float(data.get("attack_radius", 68.0))
 	_attack_arc_degree = float(data.get("attack_arc_degree", 45.0))
 	_hit_count = int(data.get("hit_count", 1))
+	# v2.9 夯实地基：mask 数据驱动（默认 18=玩家|宠物，联机版加 PvP 改 JSON）
+	_attack_target_mask = int(data.get("attack_target_mask", 18))
 	current_hp = max_hp
 
 

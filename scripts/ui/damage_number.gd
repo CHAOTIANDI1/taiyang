@@ -16,7 +16,29 @@ var _type: int = Type.DAMAGE
 
 
 func _ready() -> void:
-	# 设置文本和颜色（按类型区分）
+	# 居中对齐（场景文件里也有，这里重复设置保证一致性）
+	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	# v2.9 修复：_ready 里不再设置 text 和 modulate
+	# 因为 DamageNumberManager 调用顺序是 add_child（触发 _ready）→ set_data
+	# 如果在 _ready 设置 text，会用默认值 _amount=0，导致飘字永远显示 "0"
+	# 正确做法：set_data 里同步更新 text 和 modulate
+	_apply_visual()
+	# 启动浮动 + 淡出动画
+	_play_animation()
+
+
+# 由 DamageNumberManager 调用，设置飘字数据
+# v2.9 修复：同步更新 text 和 modulate，避免 _ready 执行时 _amount 还是默认值 0
+func set_data(amount: int, type: int = Type.DAMAGE) -> void:
+	_amount = amount
+	_type = type
+	_apply_visual()
+
+
+# 把 _amount 和 _type 应用到 Label 的 text 和 modulate
+# v2.9 修复：抽出此函数，_ready 和 set_data 都调用，保证视觉同步
+func _apply_visual() -> void:
 	match _type:
 		Type.DAMAGE:
 			text = str(_amount)
@@ -27,19 +49,6 @@ func _ready() -> void:
 		Type.HEAL:
 			text = "+" + str(_amount)
 			modulate = Color(0.3, 1, 0.3)  # 绿色（治疗）
-
-	# 居中对齐
-	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-
-	# 启动浮动 + 淡出动画
-	_play_animation()
-
-
-# 由 DamageNumberManager 调用，设置飘字数据
-func set_data(amount: int, type: int = Type.DAMAGE) -> void:
-	_amount = amount
-	_type = type
 
 
 func _play_animation() -> void:

@@ -21,7 +21,8 @@
         "attack_shape": "cone",
         "attack_radius": 68,
         "attack_arc_degree": 45,
-        "hit_count": 1
+        "hit_count": 1,
+        "attack_target_mask": 4
       }
     }
   },
@@ -44,7 +45,8 @@
       "attack_shape": "cone",
       "attack_radius": 68,
       "attack_arc_degree": 45,
-      "hit_count": 1
+      "hit_count": 1,
+      "attack_target_mask": 4
     },
     "pet_002_iron_fist": {
       "name": "铁拳",
@@ -64,7 +66,8 @@
       "attack_shape": "cone",
       "attack_radius": 68,
       "attack_arc_degree": 45,
-      "hit_count": 1
+      "hit_count": 1,
+      "attack_target_mask": 4
     },
     "pet_003_silver_seed": {
       "name": "银色种子",
@@ -84,7 +87,8 @@
       "attack_shape": "cone",
       "attack_radius": 68,
       "attack_arc_degree": 45,
-      "hit_count": 1
+      "hit_count": 1,
+      "attack_target_mask": 4
     }
   }
 }

@@ -338,7 +338,7 @@ static func run_self_test() -> bool:
 	# === hit_count 群体测试 ===
 	# 用 MockBody 模拟（GDScript 不能直接 new Node，用 Dictionary 模拟位置）
 	# 这里只测试 _get_nearest 和 _get_nearest_n 的逻辑（用空数组）
-	var empty_hits: Array = _get_nearest(origin, [])
+	var empty_hits: Node = _get_nearest(origin, [])
 	if empty_hits == null:
 		pass_count += 1
 	else:

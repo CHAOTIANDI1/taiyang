@@ -14,7 +14,8 @@
         "attack_shape": "cone",
         "attack_radius": 68,
         "attack_arc_degree": 45,
-        "hit_count": 1
+        "hit_count": 1,
+        "attack_target_mask": 18
       }
     }
   },
@@ -43,6 +44,7 @@
       "attack_radius": 68,
       "attack_arc_degree": 45,
       "hit_count": 1,
+      "attack_target_mask": 18,
       "drops": [{"item_id": "material_leather_001", "chance": 0.4}],
       "color": [0.8, 0.3, 0.2],
       "size": 32
