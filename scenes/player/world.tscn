@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://b1world01taiyang"]
+[gd_scene load_steps=11 format=3 uid="uid://b1world01taiyang"]
 
 [ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://scripts/enemy/monster.gd" id="2_monster"]
 [ext_resource type="PackedScene" path="res://scenes/pet/pet.tscn" id="3_pet"]
+[ext_resource type="PackedScene" path="res://scenes/pet/pet_egg_hatcher.tscn" id="4_hatcher"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_player"]
 size = Vector2(28, 28)
@@ -86,6 +87,4 @@ shape = SubResource("RectangleShape2D_monster")
 texture = SubResource("PlaceholderTexture2D_monster")
 modulate = Color(0.8, 0.3, 0.2, 1)
 
-[node name="TestPet" parent="." instance=ExtResource("3_pet")]
-position = Vector2(350, 400)
-pet_id = "pet_001_ham_dog"
+[node name="PetEggHatcher" parent="." instance=ExtResource("4_hatcher")]

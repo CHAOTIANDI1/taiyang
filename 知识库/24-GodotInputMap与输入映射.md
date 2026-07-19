@@ -77,6 +77,33 @@ var direction: Vector2 = Input.get_vector("move_left", "move_right", "move_up", 
 | `Input.is_action_just_released("X")` | 这帧第一次松开 | 蓄力释放 |
 | `Input.get_vector("l","r","u","d")` | 任一按下混合 | 多键移动 |
 
+### 输入处理钩子函数（Node 方法，v2.8 4.4.3 回填）
+
+除了在 `_physics_process` 里主动调 `Input.is_action_just_pressed`，Godot 还提供 3 个**输入处理钩子函数**，由引擎在输入发生时主动调用：
+
+| 函数 | 触发时机 | 典型用途 |
+|------|---------|---------|
+| `_input(event)` | 任何输入（键/鼠/手柄）| 全局输入拦截（少用）|
+| `_unhandled_input(event)` | 输入未被 UI 消费时 | 游戏逻辑按键（推荐）|
+| `_gui_input(event)` | Control 节点上的输入 | UI 内部输入（按钮等）|
+
+**`_unhandled_input` 与 `_physics_process` 的区别**：
+
+| 对比项 | `_physics_process(delta)` | `_unhandled_input(event)` |
+|--------|--------------------------|--------------------------|
+| 触发频率 | 每物理帧（60fps）| 输入事件发生时 |
+| 检测方式 | 主动调 `Input.is_action_just_pressed` | 被动接收 `event` 参数 |
+| 适合场景 | 持续状态（移动/冷却倒计时）| 一次性事件（按键/切换）|
+
+**4.4.3 应用例子**：`pet_egg_hatcher.gd` 用 `_unhandled_input` 监听 P 键孵化：
+```gdscript
+func _unhandled_input(event: InputEvent) -> void:
+    # 按 P 键触发孵化（只在输入未被 UI 消费时触发）
+    if test_egg_id != "" and event.is_action_pressed("pet_test_hatch"):
+        hatch(test_egg_id)
+```
+为什么用 `_unhandled_input` 而不是 `_physics_process`？因为孵化是一次性事件（按一次触发一次），不需要每帧检测。用 `_unhandled_input` 更省性能，也更符合"事件驱动"的设计。
+
 ## 原理
 
 Godot 启动时读 `project.godot` 的 `[input]` 段，建一张"动作名→物理键"表存到内存。每次按物理键 Godot 对照表判断是否触发"动作"，触发就更新内部状态。
@@ -118,6 +145,7 @@ Godot 启动时读 `project.godot` 的 `[input]` 段，建一张"动作名→物
 | `skill_3` | U | 技能 3（爆发，长 CD） | Phase 4.1 |
 | `interact` | E | 与 NPC 对话/物品交互 | Phase 4.1 |
 | `pet_toggle_mode` | Z | 切换宠物温和模式（默认开启，无敌只跟随） | Phase 4.4.2 |
+| `pet_test_hatch` | P | MVP 测试孵化宠物蛋（未来 inventory 接入后移除）| Phase 4.4.3 |
 
 ## 例外条款说明
 
