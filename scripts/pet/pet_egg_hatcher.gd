@@ -10,6 +10,7 @@ const HATCH_TOTAL_DURATION: float = 3.0  # 总时长 3 秒（设计真值 docs/0
 @export var test_egg_id: String = "pet_egg_01"  # MVP 测试用，未来 inventory 接入后置空
 
 var _is_hatching: bool = false
+var _already_hatched: bool = false  # 4.4.4 收尾修复：防止重复孵化（4.4.3 遗留 bug）
 var _egg_icon: ColorRect = null
 
 
@@ -31,6 +32,9 @@ func hatch(egg_id: String) -> void:
 	if _is_hatching:
 		push_warning("[PetEggHatcher] 已在孵化中，忽略重复触发")
 		return
+	if _already_hatched:
+		push_warning("[PetEggHatcher] 已孵化过，每颗蛋只能孵化一次（4.4.4 修复）")
+		return
 
 	var egg_item: Dictionary = DataManager.get_item(egg_id)
 	if egg_item.is_empty():
@@ -44,6 +48,7 @@ func hatch(egg_id: String) -> void:
 
 	print("[PetEggHatcher] 开始孵化蛋 %s（%s）→ 宠物 %s" % [egg_id, egg_item.get("name", ""), pet_id])
 	_is_hatching = true
+	_already_hatched = true
 	await _play_hatch_animation(pet_id)
 	_is_hatching = false
 

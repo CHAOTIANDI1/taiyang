@@ -28,6 +28,10 @@ const FOLLOW_OFFSET: float = 80.0
 const TELEPORT_DISTANCE: float = 300.0
 const TELEPORT_TIMEOUT: float = 3.0
 
+# 4.4.4 跟随 AI 距离阈值（滞后避免抖动）
+const FOLLOW_START_DISTANCE: float = 100.0  # idle → follow 触发距离
+const FOLLOW_STOP_DISTANCE: float = 60.0    # follow → idle 触发距离
+
 
 func _ready() -> void:
 	_color_rect = get_node_or_null("ColorRect")
@@ -58,6 +62,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed("pet_toggle_mode"):
 		toggle_gentle_mode()
 
+	# 4.4.4 状态切换（滞后避免抖动）
+	_update_state()
+
 	match _state:
 		"idle":
 			_state_idle(delta)
@@ -67,12 +74,41 @@ func _physics_process(delta: float) -> void:
 			_state_attack(delta)
 
 
+func _update_state() -> void:
+	# 4.4.4 跟随 AI 状态切换逻辑（idle ↔ follow）
+	if _owner_player == null:
+		return
+	# 4.4.6 才有 attack 状态，4.4.4 先不管
+	if _state == "attack":
+		return
+
+	var distance: float = global_position.distance_to(_owner_player.global_position)
+
+	# idle → follow：距离 > 100
+	if _state == "idle" and distance > FOLLOW_START_DISTANCE:
+		set_state("follow")
+		print("[Pet:%s] 状态切换 idle → follow（距离=%.1f）" % [pet_id, distance])
+	# follow → idle：距离 < 60
+	elif _state == "follow" and distance < FOLLOW_STOP_DISTANCE:
+		set_state("idle")
+		velocity = Vector2.ZERO
+		move_and_slide()
+		print("[Pet:%s] 状态切换 follow → idle（距离=%.1f）" % [pet_id, distance])
+
+
 func _state_idle(delta: float) -> void:
 	pass
 
 
 func _state_follow(delta: float) -> void:
-	pass
+	# 4.4.4 跟随 AI：朝玩家方向移动
+	if _owner_player == null:
+		return
+
+	var to_player: Vector2 = _owner_player.global_position - global_position
+	var direction: Vector2 = to_player.normalized()
+	velocity = direction * move_speed
+	move_and_slide()
 
 
 func _state_attack(delta: float) -> void:

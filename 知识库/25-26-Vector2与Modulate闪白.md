@@ -1,3 +1,35 @@
+# 25-26 - Vector2 向量与 Modulate 颜色调节
+
+## 本游戏实例（v2.7 回填）
+
+### 遇到的问题
+- **4.1 玩家移动**：需要 WASD 四键合一方向，且斜走不能比直走快 → 用 Vector2 + get_vector 解决
+- **4.4.4 宠物跟随 AI**：需要判断"宠物离玩家多远"决定 idle↔follow 状态切换 → 用 Vector2.distance_to() 解决
+- **4.1 受击闪白**：怪物/玩家被打时需要"白光一闪"反馈 → 用 modulate = Color(8,8,8) 解决
+
+### 专业名词/知识点
+- Vector2（2D 向量）
+- get_vector（四键合一读方向）
+- distance_to（两点距离）
+- length（向量长度）
+- normalized（归一化）
+- modulate（颜色调节器）
+- Color（颜色对象）
+
+### 技术栈/代码
+- `scripts/player/player.gd`：`Input.get_vector("move_left", "move_right", "move_up", "move_down")` + `velocity = direction * speed`
+- `scripts/pet/pet.gd`：`global_position.distance_to(_owner_player.global_position)` 判断 idle↔follow 切换
+- `scripts/pet/pet.gd`：`to_player.normalized()` 把差向量归一化为方向单位向量
+- `scripts/player/player.gd`：`modulate = Color(8.0, 8.0, 8.0, 1.0)` 受击闪白
+
+### 应用过程
+1. 玩家移动：get_vector 一次读 4 键 → 返回归一化方向向量 → 乘速度 → move_and_slide 移动
+2. 宠物跟随：每帧用 distance_to 算宠物到玩家的距离 → 距离>100 切 follow / 距离<60 切 idle（中间滞区不切换避免抖动）
+3. 宠物移动方向：`(_owner_player.global_position - global_position).normalized()` 得到"朝玩家的单位方向向量"→ 乘 move_speed → move_and_slide
+4. 受击闪白：被打时 modulate=Color(8,8,8) 发白 → 0.15 秒 Tween 回到 Color(1,1,1)
+
+---
+
 # 25 - Vector2 向量与 get_vector 移动原理
 
 ## 概念
@@ -5,6 +37,10 @@
 **Vector2** = 2D 向量，包含 (x, y) 两个 float 值。在 2D 游戏里表示"方向"或"位置"。
 
 生活类比：GPS 坐标点是一个 Vector2（经度,纬度），罗盘指向也是一个 Vector2（东西，南北）。
+
+**本项目专属例子 1（概念理解）**：玩家的位置 `position = Vector2(400, 400)` 是一个 Vector2，表示"站在地图坐标 x=400, y=400 这个点"；玩家按 D 键时 `direction = Vector2(1, 0)` 也是一个 Vector2，表示"朝右走一格"。
+
+**本项目专属例子 2（实际应用）**：4.4.4 宠物跟随 AI 中，`global_position.distance_to(_owner_player.global_position)` 就是把"宠物位置"和"玩家位置"两个 Vector2 相减得到差向量，再用 length() 算长度——生活比喻是"宠物和玩家之间拉一根橡皮筋，橡皮筋的长度就是距离"。
 
 ## 功能
 
@@ -35,6 +71,47 @@ move_and_slide()                  # Godot 用 velocity 移动 + 碰撞滑动
 ```
 
 `velocity` 是 CharacterBody2D 内置变量，给它一个向量 = "我要这帧以这个向量移动"。`move_and_slide` 执行这个移动 + 检测碰撞。
+
+### 距离计算（distance_to / length / normalized）
+
+Vector2 不只能表示方向和位置，还能算"两个点之间的距离"和"朝某点的方向"。
+
+```gdscript
+# 4.4.4 宠物跟随 AI：算宠物到玩家的距离
+var distance: float = global_position.distance_to(_owner_player.global_position)
+# distance > 100 → idle 切 follow
+# distance < 60  → follow 切 idle（双阈值滞后避免抖动）
+
+# 4.4.4 宠物移动方向：朝玩家走
+var to_player: Vector2 = _owner_player.global_position - global_position  # 差向量
+var direction: Vector2 = to_player.normalized()                          # 归一化（只留方向，长度变1）
+velocity = direction * move_speed                                         # 方向 × 速度 = 速度向量
+move_and_slide()
+```
+
+**三个核心方法**：
+
+| 方法 | 作用 | 生活比喻 |
+|------|------|---------|
+| `a.distance_to(b)` | 算 a 到 b 的距离（float） | 两点之间拉一根橡皮筋，橡皮筋长度 |
+| `vector.length()` | 算向量长度（float） | 箭头有多长 |
+| `vector.normalized()` | 把向量归一化（长度变 1，方向不变） | 箭头缩短为 1 厘米，但指向不变 |
+
+**distance_to 和 length 的关系**：
+
+```gdscript
+# 这两行等价：
+var d1: float = a.distance_to(b)
+var d2: float = (b - a).length()  # 差向量的长度
+```
+
+**length() 的数学原理**（勾股定理）：
+
+- `Vector2(3, 4).length()` = √(3² + 4²) = √25 = 5（3-4-5 直角三角形）
+- `Vector2(1, 0).length()` = √(1² + 0²) = 1
+- `Vector2(0, 0).length()` = 0
+
+**normalized() 的作用**：把任意长度的向量缩为长度 1，方向不变。这样乘速度后得到的速度向量长度恒等于速度值，不会因为向量本身长度不同导致移动快慢不一。
 
 ## 原理
 
