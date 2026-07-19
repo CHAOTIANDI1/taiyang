@@ -1,7 +1,7 @@
 {
   "_meta": {
     "file": "equipment.json",
-    "desc": "装备数据表",
+    "desc": "装备数据表（武器/护甲的攻防数值、耐久、附带技能）",
     "schema_example": {
       "<equip_id>": {
         "name": "<显示名>",
@@ -15,5 +15,28 @@
       }
     }
   },
-  "_data": {}
+  "_data": {
+    "sword_basic": {
+      "name": "新手铁剑",
+      "category": "weapon",
+      "rarity": "white",
+      "attack": 10,
+      "defense": 0,
+      "durability_max": 100,
+      "skill_id": "",
+      "tradeable": true,
+      "repair_cost_base": 10
+    },
+    "armor_cloth": {
+      "name": "布衣",
+      "category": "armor",
+      "rarity": "white",
+      "attack": 0,
+      "defense": 5,
+      "durability_max": 100,
+      "skill_id": "",
+      "tradeable": true,
+      "repair_cost_base": 8
+    }
+  }
 }

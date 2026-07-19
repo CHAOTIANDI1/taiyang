@@ -1,7 +1,7 @@
 {
   "_meta": {
     "file": "items.json",
-    "desc": "物品数据表（含重要物品、道具、材料等）",
+    "desc": "物品数据表（含重要物品、道具、武器、护甲、食物、材料、副职业道具、技能书 8 类）",
     "schema_example": {
       "<item_id>": {
         "name": "<显示名>",
@@ -63,9 +63,94 @@
       "tradeable": false
     }
   },
-  "usable": {},
-  "material": {},
-  "food": {},
+  "usable": {
+    "potion_hp_small": {
+      "name": "小型回血药水",
+      "category": "usable",
+      "rarity": "white",
+      "description": "回复 30 点生命值，冷却 15 秒。战斗中的救命稻草。",
+      "tradeable": true,
+      "effect": {"type": "heal_hp", "amount": 30},
+      "cooldown": 15,
+      "stack": 99
+    }
+  },
+  "weapon": {
+    "sword_basic": {
+      "name": "新手铁剑",
+      "category": "weapon",
+      "rarity": "white",
+      "description": "新手村铁匠铺最便宜的铁剑。攻防平平，但胜在耐用。",
+      "tradeable": true,
+      "equip_id": "sword_basic"
+    }
+  },
+  "armor": {
+    "armor_cloth": {
+      "name": "布衣",
+      "category": "armor",
+      "rarity": "white",
+      "description": "普通布料缝制的衣物。聊胜于无的防护。",
+      "tradeable": true,
+      "equip_id": "armor_cloth"
+    }
+  },
+  "food": {
+    "food_grilled_fish": {
+      "name": "烤鱼",
+      "category": "food",
+      "rarity": "white",
+      "description": "钓鱼副职业产出的鱼烤制而成。回复 20 点生命值。",
+      "tradeable": true,
+      "effect": {"type": "heal_hp", "amount": 20},
+      "cooldown": 15,
+      "stack": 30
+    },
+    "food_stew": {
+      "name": "炖菜",
+      "category": "food",
+      "rarity": "white",
+      "description": "用肉和蔬菜炖煮的家常菜。回复 35 点生命值。",
+      "tradeable": true,
+      "effect": {"type": "heal_hp", "amount": 35},
+      "cooldown": 15,
+      "stack": 30
+    }
+  },
+  "material": {
+    "material_leather_001": {
+      "name": "普通皮革",
+      "category": "material",
+      "rarity": "white",
+      "description": "从红尾蝎等小型怪物身上剥下的皮革。未来锻造副职业的原料。",
+      "tradeable": true,
+      "stack": 99
+    },
+    "fish_common": {
+      "name": "普通淡水鱼",
+      "category": "material",
+      "rarity": "white",
+      "description": "野外 A 钓鱼点常见的鱼类。可以烤制或炖菜。",
+      "tradeable": true,
+      "stack": 99
+    },
+    "meat_raw": {
+      "name": "生肉",
+      "category": "material",
+      "rarity": "white",
+      "description": "从怪物身上获取的生肉。需要烹饪才能食用。",
+      "tradeable": true,
+      "stack": 99
+    },
+    "veg_carrot": {
+      "name": "胡萝卜",
+      "category": "material",
+      "rarity": "white",
+      "description": "野外采集的常见蔬菜。炖菜的主要原料之一。",
+      "tradeable": true,
+      "stack": 99
+    }
+  },
   "sub_prof": {},
   "skill_book": {}
 }

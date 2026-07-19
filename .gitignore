@@ -29,3 +29,11 @@ Thumbs.db
 *.log
 
 *.uid
+
+# Trae IDE workspace
+.trae/
+
+# Obsidian workspace state (本地工作区布局，不进版本管理)
+知识库/.obsidian/workspace.json
+知识库/.obsidian/graph.json
+知识库/.obsidian/workspace-mobile.json

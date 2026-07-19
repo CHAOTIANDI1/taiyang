@@ -46,6 +46,7 @@ var _is_telegraphing: bool = false
 var _target: Node = null
 var _is_dying: bool = false
 var _die_timer: float = 0.0
+var _drops: Array = []  # Phase 4.5：掉落表（从 monsters.json 加载）
 
 # 4.4.6 仇恨机制
 var _aggro_timer: float = 0.0        # 仇恨计时器（> 0 时强制打玩家）
@@ -321,6 +322,11 @@ func start_dying() -> void:
 	_is_dying = true
 	_die_timer = 0.0
 	emit_signal("died")
+	# Phase 4.5：死亡时按掉落表发放物品（满包自动入邮件）
+	if _drops.size() > 0:
+		var data: Dictionary = DataManager.get_monster(monster_id)
+		var display_name: String = String(data.get("name", monster_id))
+		LootHelper.drop_loot(monster_id, display_name)
 	if _debug:
 		print("[Monster:%s] 死亡！" % monster_id)
 
@@ -345,6 +351,8 @@ func _load_data_from_json() -> void:
 	_hit_count = int(data.get("hit_count", 1))
 	# v2.9 夯实地基：mask 数据驱动（默认 18=玩家|宠物，联机版加 PvP 改 JSON）
 	_attack_target_mask = int(data.get("attack_target_mask", 18))
+	# Phase 4.5：加载掉落表
+	_drops = data.get("drops", [])
 	current_hp = max_hp
 
 

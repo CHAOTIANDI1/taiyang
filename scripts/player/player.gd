@@ -155,6 +155,8 @@ func _check_hit() -> void:
 			candidates.append(body)
 	# 精筛：用 DamageArea 按扇形判定
 	var hits: Array = DamageArea.filter_targets(global_position, _facing, ATTACK_SHAPE_CONFIG, candidates)
+	# Phase 4.5：本次攻击若命中至少 1 个目标，消耗 1 点武器耐久（一次攻击只消耗 1 点）
+	var has_hit: bool = hits.size() > 0
 	for body in hits:
 		if body == null or not is_instance_valid(body):
 			continue
@@ -166,6 +168,8 @@ func _check_hit() -> void:
 		# hit_count=1 时只打 1 个
 		if int(ATTACK_SHAPE_CONFIG.get("hit_count", 1)) == 1:
 			break
+	if has_hit:
+		EquipmentManager.consume_durability("weapon", 1)
 
 
 func _shake_camera(intensity: float, duration: float) -> void:

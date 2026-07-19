@@ -37,11 +37,25 @@ func get_monster(id: String) -> Dictionary:
 
 func get_item(id: String) -> Dictionary:
 	var all: Dictionary = _cache.get("items", {})
-	for category in ["important", "usable", "material", "food", "sub_prof", "skill_book"]:
+	for category in ["important", "usable", "weapon", "armor", "food", "material", "sub_prof", "skill_book"]:
 		var cat: Dictionary = all.get(category, {})
 		if cat.has(id):
 			return cat[id]
 	return {}
+
+func get_equipment(id: String) -> Dictionary:
+	var d: Dictionary = _cache.get("equipment", {}).get("_data", {})
+	return d.get(id, {})
+
+func get_item_full(id: String) -> Dictionary:
+	var item: Dictionary = get_item(id)
+	if item.is_empty():
+		return {}
+	if item.get("category", "") in ["weapon", "armor"]:
+		var equip: Dictionary = get_equipment(id)
+		if not equip.is_empty():
+			return item.merged(equip)
+	return item
 
 func get_skill(id: String) -> Dictionary:
 	var d: Dictionary = _cache.get("skills", {}).get("_data", {})
