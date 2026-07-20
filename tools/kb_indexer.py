@@ -168,7 +168,8 @@ def save_index(vectors, metadata):
 
     print(f"\n💾 存储向量到 {db_path} ...")
     db = sqlite3.connect(str(db_path))
-    db.enable_extension("sqlite_vec")
+    db.enable_load_extension(True)
+    sqlite_vec.load(db)
 
     # 建表
     db.execute(f"""

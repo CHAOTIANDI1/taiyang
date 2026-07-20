@@ -70,24 +70,30 @@ def load_metadata():
 
 
 def load_vectors(meta):
-    """从 SQLite-vec 加载所有向量"""
+    """从 SQLite-vec 加载所有向量
+
+    v3.2 修复：sqlite-vec 查询返回二进制 blob，不是 JSON 字符串。
+    用 numpy.frombuffer 解析二进制为 float 列表。
+    """
     try:
         import sqlite3
         import sqlite_vec
+        import numpy as np
     except ImportError as e:
-        print("❌ 依赖未装：sqlite-vec")
+        print("❌ 依赖未装：sqlite-vec 或 numpy")
         print("   请先运行：pip install -r tools/requirements.txt")
         print(f"   错误详情：{e}")
         sys.exit(1)
 
     db = sqlite3.connect(str(DB_PATH))
-    db.enable_extension("sqlite_vec")
+    db.enable_load_extension(True)
+    sqlite_vec.load(db)
 
-    # 查询所有向量
+    # 查询所有向量（sqlite-vec 返回二进制 blob，用 numpy 解析）
     cursor = db.execute("SELECT rowid, embedding FROM notes_vec ORDER BY rowid")
     vectors = {}
-    for rowid, embedding_json in cursor:
-        vectors[rowid] = json.loads(embedding_json)
+    for rowid, embedding_blob in cursor:
+        vectors[rowid] = np.frombuffer(embedding_blob, dtype=np.float32).tolist()
     db.close()
 
     return vectors
