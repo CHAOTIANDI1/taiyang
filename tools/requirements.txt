@@ -1,0 +1,33 @@
+# 知识库 AI-RAG 第 1/4 层依赖清单（v3.2 新增）
+#
+# 用途：
+#   - 第 1 层 语义索引（kb_indexer.py）：BGE-M3 embedding + SQLite-vec 存储
+#   - 第 4 层 跨笔记推理（kb_recommender.py）：复用第 1 层索引 + 余弦相似度 Top-K 推荐
+#
+# 安装方式（在项目根目录运行）：
+#   pip install -r tools/requirements.txt
+#
+# 体积：约 2GB（torch 占大部分）
+# 用户硬件：4060 天选4 R7 锐龙版，CPU 版本够用
+# 未来升级：如需 GPU 加速，改装 torch CUDA 版本（详见 https://pytorch.org/）
+#
+# 技术栈独立性（AGENTS.md §20.11）：
+#   - 本依赖清单只供知识库工具使用，不进入游戏运行栈
+#   - 游戏代码（scripts/）不引用这些库
+#   - 这些库不引用游戏代码（scripts/）或游戏数据（data/）
+
+# BGE-M3 模型加载与编码（第 1 层核心）
+sentence-transformers>=2.7.0
+
+# sentence-transformers 后端（CPU 版本，默认安装）
+# 如需 GPU 加速，改装 torch CUDA 版本
+torch>=2.2.0
+
+# sentence-transformers 依赖（显式列出便于版本管理）
+transformers>=4.40.0
+
+# SQLite 向量扩展（第 1 层向量存储 + 第 4 层相似度查询）
+sqlite-vec>=0.1.6
+
+# 向量计算（余弦相似度等）
+numpy>=1.26.0
