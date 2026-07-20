@@ -121,7 +121,7 @@ emit_signal("died")
 | ui.dialogue_finished | 对话 | 推进任务 |
 | mail.received | 邮件 | 邮件红点提示 |
 
-## 常见错误
+## 反例 vs 正例（常见错误）
 
 | 错误 | 原因 |
 |------|------|

@@ -118,7 +118,7 @@ give_item("material_leather_001", 1, "击败 红尾蝎")
 
 ---
 
-## 运作方式（含具体例子）
+## 运作方式
 
 ### LootHelper.give_item 完整流程
 
@@ -277,7 +277,7 @@ func _unhandled_input(event):
 
 ---
 
-## 使用场景（含对接）
+## 使用场景
 
 ### 当前对接
 

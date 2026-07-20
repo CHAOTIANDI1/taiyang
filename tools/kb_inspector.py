@@ -70,15 +70,26 @@ def read_note(path):
 
 
 def check_broken_links(notes):
-    """检查 1：断链检测——[[文件名]] 目标是否存在"""
+    """检查 1：断链检测——[[文件名]] 目标是否存在
+
+    v3.2 修复：
+    1. 把 00-索引.md 加入断链检测目标集（list_note_files 排除它，但断链检测应包含）
+    2. 跳过反引号 `内的 [[xxx]]`（避免把示例文字误判为断链）
+    """
     issues = []
     all_note_names = {p.stem for p in notes}  # 不含扩展名
+    # 00-索引.md 被 list_note_files 排除（不做自身巡检），但其他笔记可以链接它
+    all_note_names.add("00-索引")
 
     link_pattern = re.compile(r"\[\[([^\]]+)\]\]")
+    # 匹配反引号内的内容（单行 `xxx` 或多行 ```xxx```），用于跳过示例文字
+    inline_code_pattern = re.compile(r"`[^`]*`")
 
     for note in notes:
         content = read_note(note)
-        for match in link_pattern.finditer(content):
+        # 移除反引号内的内容，避免把 `[[xxx]]` 示例文字误判为断链
+        content_for_scan = inline_code_pattern.sub("", content)
+        for match in link_pattern.finditer(content_for_scan):
             link_target = match.group(1).strip()
             # 处理 [[文件名#段落]] 这种带段落跳转
             base_name = link_target.split("#")[0].strip()
@@ -96,7 +107,12 @@ def check_broken_links(notes):
 
 
 def check_duplicate_concepts(notes):
-    """检查 2：重复定义——多篇笔记 ## 概念 段标题重复"""
+    """检查 2：重复定义——多篇笔记 ## 概念 段标题重复
+
+    v3.2 修复：
+    1. 跳过"反例"开头的标题（v2.7 准则"反例 vs 正例"段的衍生标题，如"反例 vs 正例（常见错误）"）
+    2. 跳过"⚠️"开头的标题（声明段，非概念段，如"⚠️ v3.1 知识库独立声明"）
+    """
     issues = []
     concept_titles = {}  # {标题: [笔记名列表]}
 
@@ -109,7 +125,9 @@ def check_duplicate_concepts(notes):
                           "## 反例 vs 正例对照", "## 关联"}
         for match in re.finditer(r"^##\s+(.+)$", content, re.MULTILINE):
             title = match.group(1).strip()
-            if title.startswith(("概念", "本游戏实例", "本实例")):
+            # v3.2：跳过 v2.7 准则 8 段的衍生标题 + 声明段
+            # v3.2 追加：跳过"使用场景"和"MVP"开头（"MVP 范围"是使用场景的衍生段）
+            if title.startswith(("概念", "本游戏实例", "本实例", "反例", "⚠️", "使用场景", "MVP")):
                 continue
             if f"## {title}" in fixed_sections:
                 continue

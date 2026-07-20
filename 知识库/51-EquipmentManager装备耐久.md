@@ -1,7 +1,7 @@
 # 51 - EquipmentManager 装备耐久
 
 > 本笔记解释装备槽位管理、耐久度系统、封禁机制、跨系统协作（InventoryManager + DataManager + 玩家攻击）。
-> 上接 [[50-InventoryManager容器逻辑]]，下接 [[52-InventoryUI与I键开关]]。
+> 上接 [[50-InventoryManager容器逻辑]]，下接 [[52-满包入邮件与怪物掉落与InventoryUI]]。
 
 ---
 
@@ -108,7 +108,7 @@ Phase 4.5 子任务 3：玩家装备武器后需要：
 
 ---
 
-## 运作方式（含具体例子）
+## 运作方式
 
 ### equip 完整流程
 
@@ -246,7 +246,7 @@ repair 不改变装备 ID，只重置 durability。
 
 ---
 
-## 使用场景（含对接）
+## 使用场景
 
 ### 当前对接（MVP）
 
@@ -303,4 +303,4 @@ NPC 铁匠修复价 = repair_cost_base × (1 - durability / durability_max)
 - Autoload 单例原理：[[06-单例模式与Autoload]]
 - 信号机制详解：[[29-Signal信号机制]]
 - 跨系统协作类似：[[47-AttackAreaFactory与mask数据驱动]]（多管家协作）
-- 接下来 [[52-InventoryUI与I键开关]] 会在 UI 层调用本笔记的接口
+- 接下来 [[52-满包入邮件与怪物掉落与InventoryUI]] 会在 UI 层调用本笔记的接口

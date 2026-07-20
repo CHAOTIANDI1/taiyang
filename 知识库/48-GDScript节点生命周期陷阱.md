@@ -14,7 +14,7 @@
 
 **技术栈/代码/美术**：
 - Godot 4.7.1 + GDScript
-- `DamageNumberManager.gd`（Autoload 单例）
+- `damage_number_manager.gd`（Autoload 单例）
 - `damage_number.gd`（Label 脚本）
 - `damage_number.tscn`（Label 场景）
 
@@ -65,7 +65,7 @@ instance.set_data(amount, type_enum)  # 之后才设置真实数值
 
 ---
 
-## 运作方式（含具体例子）
+## 运作方式
 
 ### `_ready()` 的触发链
 
@@ -181,7 +181,7 @@ func set_data(amount: int, type: int = Type.DAMAGE) -> void:
 
 ---
 
-## 使用场景（含对接）
+## 使用场景
 
 ### 场景 1：本项目的伤害飘字（已应用）
 

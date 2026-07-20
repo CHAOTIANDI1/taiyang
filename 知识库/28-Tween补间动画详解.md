@@ -85,7 +85,7 @@ t.tween_property(box, "position", target, 0.5)
 | player.gd `_spawn_damage_number` | Label 上飘+淡出+销毁 |
 | monster.gd `take_damage` | 0.1 秒从白色恢复原色 |
 
-## 常见错误
+## 反例 vs 正例（常见错误）
 
 | 错误 | 原因 | 修复 |
 |------|------|------|

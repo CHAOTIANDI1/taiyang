@@ -143,7 +143,7 @@ await DialogueBox.choice_selected
 _advance_story()
 ```
 
-## 常见错误
+## 反例 vs 正例（常见错误）
 
 ### 错误 1：调用方忘记 await
 ```gdscript
