@@ -37,3 +37,14 @@ Thumbs.db
 知识库/.obsidian/workspace.json
 知识库/.obsidian/graph.json
 知识库/.obsidian/workspace-mobile.json
+
+# 知识库本地备份（防升级崩溃用，不进版本管理）
+knowledge_backup/
+
+# 知识库 AI-RAG 索引与报告（派生数据，可重建）
+知识库/.ai-index/
+知识库/.ai-reports/
+
+# 知识库临时草稿
+知识库/dadad.txt
+知识库/提示词/
