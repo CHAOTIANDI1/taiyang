@@ -48,3 +48,9 @@ knowledge_backup/
 # 知识库临时草稿
 知识库/dadad.txt
 知识库/提示词/
+
+# Python 工具脚本运行时产物（v3.1 新增）
+tools/__pycache__/
+tools/.venv/
+*.pyc
+*.pyo
